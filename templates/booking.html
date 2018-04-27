@@ -2,12 +2,9 @@
 {% block title %}Make Booking{% endblock %}
 {% block content %}
     <h3>Make a booking</h3>
-      <form>
-         Start Date:
-         <input type="date" name="start">
-      </form>
-      <form>
-         End Date:
-         <input type="date" name="end">
-      </form>
+    <form>
+        {% csrf_token %}
+        {{ form.as_table }}
+        <input type="submit" value="Submit" />
+    </form>
 {% endblock %}

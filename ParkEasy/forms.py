@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import Customer, Booking, Departing, Arriving, Payment
 
 
-class CustomerCreationForm(UserCreationForm):
+class CustomerCreationFormAdmin(UserCreationForm):
     error_messages = {
         'password_mismatch': "The two password fields didn't match.",
     }
@@ -23,7 +23,7 @@ class CustomerCreationForm(UserCreationForm):
         return customer
 
 
-class CustomerChangeForm(UserChangeForm):
+class CustomerChangeFormAdmin(UserChangeForm):
     class Meta:
         model = Customer
         fields = '__all__'
@@ -35,7 +35,7 @@ class CustomerChangeForm(UserChangeForm):
             f.queryset = f.queryset.select_related('content_type')
 
 
-class BookingCreationForm(forms.ModelForm):
+class BookingCreationFormAdmin(forms.ModelForm):
 
     booking_date = forms.DateTimeField(label="Date Booked", widget=forms.DateInput)
 
@@ -44,13 +44,13 @@ class BookingCreationForm(forms.ModelForm):
         fields = ('email',)
 
 
-class BookingChangeForm(forms.ModelForm):
+class BookingChangeFormAdmin(forms.ModelForm):
     class Meta:
         model = Booking
         fields = '__all__'
 
 
-class DepartingCreationForm(forms.ModelForm):
+class DepartingCreationFormAdmin(forms.ModelForm):
 
     departing_flight_datetime = forms.DateTimeField(label="Departure Date", widget=forms.DateInput)
     departing_flight_number = forms.TextInput()
@@ -61,13 +61,13 @@ class DepartingCreationForm(forms.ModelForm):
         fields = ('email',)
 
 
-class DepartingChangeForm(forms.ModelForm):
+class DepartingChangeFormAdmin(forms.ModelForm):
     class Meta:
         model = Departing
         fields = '__all__'
 
 
-class ArrivingCreationForm(forms.ModelForm):
+class ArrivingCreationFormAdmin(forms.ModelForm):
 
     arriving_flight_datetime = forms.DateTimeField(label="Departure Date", widget=forms.DateInput)
     arriving_flight_number = forms.TextInput()
@@ -77,13 +77,13 @@ class ArrivingCreationForm(forms.ModelForm):
         fields = ('email',)
 
 
-class ArrivingChangeForm(forms.ModelForm):
+class ArrivingChangeFormAdmin(forms.ModelForm):
     class Meta:
         model = Arriving
         fields = '__all__'
 
 
-class PaymentCreationForm(forms.ModelForm):
+class PaymentCreationFormAdmin(forms.ModelForm):
 
     date_paid = forms.DateTimeField(label="Date of Payment", widget=forms.DateInput)
     card_type = forms.TextInput()
@@ -97,8 +97,19 @@ class PaymentCreationForm(forms.ModelForm):
         fields = ('email',)
 
 
-class PaymentChangeForm(forms.ModelForm):
+class PaymentChangeFormAdmin(forms.ModelForm):
     class Meta:
         model = Payment
         fields = '__all__'
 
+
+class BookingCreationFormCustomer(forms.ModelForm):
+
+    class Meta:
+        model = Booking
+        fields = '__all__'
+
+
+class TestForm(forms.Form):
+    name = forms.CharField(max_length=30)
+    email = forms.EmailField(max_length=254)

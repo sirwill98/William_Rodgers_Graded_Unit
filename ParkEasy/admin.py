@@ -1,15 +1,17 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin
-from .forms import CustomerCreationForm, CustomerChangeForm, BookingCreationForm, BookingChangeForm, \
-    DepartingCreationForm, DepartingChangeForm, ArrivingCreationForm, ArrivingChangeForm, PaymentCreationForm, \
-    PaymentChangeForm
+from .forms import CustomerCreationFormAdmin, CustomerChangeFormAdmin, \
+    BookingCreationFormAdmin, BookingChangeFormAdmin, \
+    DepartingCreationFormAdmin, DepartingChangeFormAdmin, \
+    ArrivingCreationFormAdmin, ArrivingChangeFormAdmin, \
+    PaymentCreationFormAdmin, PaymentChangeFormAdmin
 from .models import Customer, Booking, Departing, Arriving, Payment
 
 
 class CustomerAdmin(UserAdmin):
-    add_form = CustomerCreationForm
-    form = CustomerChangeForm
+    add_form = CustomerCreationFormAdmin
+    form = CustomerChangeFormAdmin
     model = Customer
     list_display = ['id', 'email', 'address_line1', 'address_line2', 'postcode', 'tel_no']
     fieldsets = (
@@ -31,8 +33,8 @@ class CustomerAdmin(UserAdmin):
 
 
 class BookingAdmin(ModelAdmin):
-    add_form = BookingCreationForm
-    form = BookingChangeForm
+    add_form = BookingCreationFormAdmin
+    form = BookingChangeFormAdmin
     model = Booking
     list_display = ['id', 'customer', 'booking_date']
     fieldsets = (
@@ -47,8 +49,8 @@ class BookingAdmin(ModelAdmin):
 
 
 class DepartingAdmin(ModelAdmin):
-    add_form = DepartingCreationForm
-    form = DepartingChangeForm
+    add_form = DepartingCreationFormAdmin
+    form = DepartingChangeFormAdmin
     model = Departing
     list_display = ['id', 'customer', 'departing_flight_number', 'departing_flight_datetime', 'destination']
     fieldsets = (
@@ -63,8 +65,8 @@ class DepartingAdmin(ModelAdmin):
 
 
 class ArrivingAdmin(ModelAdmin):
-    add_form = ArrivingCreationForm
-    form = ArrivingChangeForm
+    add_form = ArrivingCreationFormAdmin
+    form = ArrivingChangeFormAdmin
     model = Arriving
     list_display = ['id', 'customer', 'arriving_flight_number', 'arriving_flight_datetime']
     fieldsets = (
@@ -79,8 +81,8 @@ class ArrivingAdmin(ModelAdmin):
 
 
 class PaymentAdmin(ModelAdmin):
-    add_form = PaymentCreationForm
-    form = PaymentChangeForm
+    add_form = PaymentCreationFormAdmin
+    form = PaymentChangeFormAdmin
     model = Payment
     list_display = ['customer', 'date_paid', 'card_type', 'card_number', 'amount', 'expiry_date',
                     'security_number']

@@ -1,49 +1,47 @@
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}"/>
 <script src={% static 'js/app.js' %}></script>
 <html>
-  <head>
+<head>
     <title>ParkEasy Airport Parking</title>
-  </head>
-  <body>
-    <div class="navbar">
-        <div class="dropdown">
-        <button class="dropbtn">Dropdown
-          <i class="fa fa-caret-down"></i>
-        </button>
+</head>
+<body>
+<div class="navbar">
+    <a href="{% url 'booking' %}">Make Booking</a>
+    <a href="{% url 'home' %}">Home</a>
+    <div class="dropdown">
+        <button class="dropbtn">Dropdown</button>
         <div class="dropdown-content">
-          <div class="row">
-              <h3>Make a booking</h3>
-              <form method="POST" action="{% url 'booking' %}">
-                  Start Date:
-                  <input type="date" name="start" title="test">
-                  <br>
-                  End Date:
-                  <input type="date" name="end" title="test">
-                  <br>
-                  Make Booking:
-                  <input type="button" name="create" value="Submit">
-              </form>
-          </div>
+            <div class="column">
+                <h3>Make a booking</h3>
+                <form action="" method="POST">
+                    Start Date:
+                    <input type="date" name="start" title="test">
+                    <br>
+                    End Date:
+                    <input type="date" name="end" title="test">
+                    <br>
+                    Make Booking:
+                    <input type="button" name="create" value="Submit">
+                </form>
+            </div>
         </div>
-      </div>
-      <a href="{% url 'booking' %}">Make Booking</a>
-      <a href="{% url 'home' %}">Home</a>
-      {% if user.is_superuser %}
-          <a href="{% url 'admin:index' %}">Admin</a>
-      {% endif %}
     </div>
-    <header>
-      <h1><a href="/">Parking</a></h1>
-    </header>
-    {% if user.is_authenticated %}
-        <p>Hi {{ user.email }}!</p>
-        <p><a href="{% url 'logout' %}">logout</a></p>
-    {% else %}
-        <p>You are not logged in.</p>
-        <a href="{% url 'login' %}">login</a>
+    {% if user.is_superuser %}
+        <a href="{% url 'admin:index' %}">Admin</a>
     {% endif %}
-    {% block content %}
-    {% endblock content %}
-  </body>
+</div>
+<header>
+    <h1><a href="/">Parking</a></h1>
+</header>
+{% if user.is_authenticated %}
+    <p>Hi {{ user.email }}!</p>
+    <p><a href="{% url 'logout' %}">logout</a></p>
+{% else %}
+    <p>You are not logged in.</p>
+    <a href="{% url 'login' %}">login</a>
+{% endif %}
+{% block content %}
+{% endblock content %}
+</body>
 </html>
