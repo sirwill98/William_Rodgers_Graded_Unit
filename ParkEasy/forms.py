@@ -3,6 +3,27 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import Customer, Booking, Departing, Arriving, Payment
 
 
+class CustomerCreationFormUser(UserCreationForm):
+    error_messages = {
+        'password_mismatch': "The two password fields didn't match.",
+    }
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Password confirmation", widget=forms.PasswordInput,
+                                help_text="Enter the same password as above, for verification.")
+
+    class Meta:
+        model = Customer
+        fields = ('email', 'password1', 'password2',
+                  'first_name', 'last_name', 'postcode', 'address_line1', 'address_line2', 'tel_no')
+
+    def save(self, commit=True):
+        customer = super(UserCreationForm, self).save(commit=False)
+        customer.set_password(self.cleaned_data["password1"])
+        if commit:
+            customer.save()
+        return customer
+
+
 class CustomerCreationFormAdmin(UserCreationForm):
     error_messages = {
         'password_mismatch': "The two password fields didn't match.",
@@ -104,10 +125,12 @@ class PaymentChangeFormAdmin(forms.ModelForm):
 
 
 class BookingCreationFormCustomer(forms.ModelForm):
+    Start = forms.DateField(widget=forms.SelectDateWidget)
+    End = forms.DateField(widget=forms.SelectDateWidget)
 
     class Meta:
         model = Booking
-        fields = '__all__'
+        fields = ('Start', 'End')
 
 
 class TestForm(forms.Form):
