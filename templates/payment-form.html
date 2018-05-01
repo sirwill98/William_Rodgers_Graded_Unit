@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Make Booking{% endblock %}
+{% block content %}
+<form action="{% url 'checkout' %}" method="POST">
+    {% csrf_token %}
+    <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+        data-key="pk_test_CjUTf64aBqF2uU2TdROX19aP"
+        data-amount="2000"
+        data-name="Your APp"
+        data-description="Your Product"
+        data-image="Link to your logo"
+        data-currency="usd">
+    </script>
+</form>
+{% endblock content %}

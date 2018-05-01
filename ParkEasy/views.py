@@ -3,6 +3,10 @@ from .models import Customer, Booking
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from .forms import BookingCreationFormCustomer, CustomerCreationFormUser
+from William_Rodgers_Graded_Unit import settings
+import stripe
+import datetime
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class HomePageView(ListView):
@@ -48,3 +52,39 @@ def signup(request):
         form = CustomerCreationFormUser()
     return render(request, 'registration/signup.html', {'form': form})
 
+
+def payment_form(request):
+
+    context = {"stripe_key": settings.STRIPE_PUBLIC_KEY}
+    return render(request, "payment-form.html", context)
+
+
+def checkout(request):
+
+    new_booking = Booking(
+        customer=Customer.objects.get(email=request.user.email),
+        booking_date=datetime.date.today(),
+        booking_length=7
+    )
+
+    if request.method == "POST":
+        token = request.POST.get("stripeToken")
+
+    try:
+        charge = stripe.Charge.create(
+            amount=2000,
+            currency="usd",
+            source=token,
+            description="The product charged to the user"
+        )
+
+        new_booking.charge_id = charge.id
+
+    except stripe.error.CardError as ce:
+        return False, ce
+
+    else:
+        new_booking.save()
+        return redirect("home")
+        # The payment was successfully processed, the user's card was charged.
+        # You can now redirect the user to another page or whatever you want

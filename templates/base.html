@@ -1,46 +1,54 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}"/>
-<script src={% static 'js/app.js' %}></script>
 <html>
 <head>
     <title>ParkEasy Airport Parking</title>
 </head>
 <body>
 <div class="navbar">
-    <a href="{% url 'booking' %}">Make Booking</a>
+    {% if user.is_authenticated %}
+        <a href="{% url 'booking' %}">Make Booking</a>
+    {% else %}
+        <a href="{% url 'login' %}">Make Booking</a>
+    {% endif %}
     <a href="{% url 'home' %}">Home</a>
-    <div class="dropdown">
+    <a href="{% url 'payment' %}">pay test</a>
+    <div class="dropdown" style="float:left;">
         <button class="dropbtn">Dropdown</button>
-        <div class="dropdown-content">
-            <div class="column">
-                <h3>Make a booking</h3>
-                <form action="" method="POST">
-                    Start Date:
-                    <input type="date" name="start" title="test">
-                    <br>
-                    End Date:
-                    <input type="date" name="end" title="test">
-                    <br>
-                    Make Booking:
-                    <input type="button" name="create" value="Submit">
-                </form>
-            </div>
+        <div class="dropdown-content" style="left:0;">
+            <h3>Make a booking</h3>
+            <form action="" method="POST">
+                Start Date:
+                <input type="date" name="start" title="test">
+                <br>
+                End Date:
+                <input type="date" name="end" title="test">
+                <br>
+                Make Booking:
+                <input type="button" name="create" value="Submit">
+            </form>
         </div>
     </div>
     {% if user.is_superuser %}
         <a href="{% url 'admin:index' %}">Admin</a>
     {% endif %}
+    <div class="dropdown" style="float:right;">
+        <button class="dropbtn">test</button>
+        <div class="dropdown-content">
+            {% if user.is_authenticated %}
+                <p><a href="{% url 'logout' %}">edit user</a></p>
+                <p><a href="{% url 'logout' %}">logout</a></p>
+            {% else %}
+                <p>You are not logged in.</p>
+                <a href="{% url 'login' %}">login</a>
+            {% endif %}
+        </div>
+    </div>
 </div>
 <header>
-    <h1><a href="/">Parking</a></h1>
+    {% block header %}
+    {% endblock header %}
 </header>
-{% if user.is_authenticated %}
-    <p>Hi {{ user.email }}!</p>
-    <p><a href="{% url 'logout' %}">logout</a></p>
-{% else %}
-    <p>You are not logged in.</p>
-    <a href="{% url 'login' %}">login</a>
-{% endif %}
 {% block content %}
 {% endblock content %}
 </body>
