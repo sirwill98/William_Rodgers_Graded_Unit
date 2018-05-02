@@ -30,6 +30,8 @@ def booking_form(request):
             cust = Customer.objects.get(email=request.user.email)
             newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length)
             newbooking1.save()
+            request.session['booking'] = newbooking1
+            return render(request, 'payment-form.html')
         else:
             return render(request, 'booking.html', {'form': form})
     else:
@@ -37,6 +39,31 @@ def booking_form(request):
 
     return render(request, 'booking.html', {'form': form})
 
+
+def checkout(request):
+
+    booking = request.session.get('booking', None)
+    if request.method == "POST":
+        token = request.POST.get("stripeToken")
+
+    try:
+        charge = stripe.Charge.create(
+            amount=2000,
+            currency="usd",
+            source=token,
+            description="The product charged to the user"
+        )
+
+        booking.charge_id = charge.id
+
+    except stripe.error.CardError as ce:
+        return False, ce
+
+    else:
+        booking.save()
+        return redirect("home")
+        # The payment was successfully processed, the user's card was charged.
+        # You can now redirect the user to another page or whatever you want
 
 def signup(request):
     if request.method == 'POST':
@@ -57,34 +84,3 @@ def payment_form(request):
 
     context = {"stripe_key": settings.STRIPE_PUBLIC_KEY}
     return render(request, "payment-form.html", context)
-
-
-def checkout(request):
-
-    new_booking = Booking(
-        customer=Customer.objects.get(email=request.user.email),
-        booking_date=datetime.date.today(),
-        booking_length=7
-    )
-
-    if request.method == "POST":
-        token = request.POST.get("stripeToken")
-
-    try:
-        charge = stripe.Charge.create(
-            amount=2000,
-            currency="usd",
-            source=token,
-            description="The product charged to the user"
-        )
-
-        new_booking.charge_id = charge.id
-
-    except stripe.error.CardError as ce:
-        return False, ce
-
-    else:
-        new_booking.save()
-        return redirect("home")
-        # The payment was successfully processed, the user's card was charged.
-        # You can now redirect the user to another page or whatever you want
