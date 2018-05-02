@@ -1,7 +1,7 @@
 # blog/urls.py
 from . import views
 from django.urls import path, include
-from .views import booking_form, signup, payment_form, checkout
+from .views import booking_form, signup, payment_form, checkout, edit
 
 urlpatterns = [
     path('', views.HomePageView.as_view(), name='home'),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('signup/', signup, name="signup"),
     path('payment-form/', payment_form, name="payment"),
     path('checkout/', checkout, name="checkout"),
+    path('edit/', edit, name="edit")
 ]

@@ -124,6 +124,12 @@ class PaymentChangeFormAdmin(forms.ModelForm):
         fields = '__all__'
 
 
+class CustomerChangeFormCustomer(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ('email', 'first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
+
+
 class BookingCreationFormCustomer(forms.ModelForm):
     Start = forms.DateField(widget=forms.SelectDateWidget)
     End = forms.DateField(widget=forms.SelectDateWidget)

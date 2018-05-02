@@ -9,7 +9,7 @@
     {% if user.is_authenticated %}
         <a href="{% url 'booking' %}">Make Booking</a>
     {% else %}
-        <a href="{% url 'login' %}">Make Booking</a>
+        <a href="{% url 'login' %}">login to Make Booking</a>
     {% endif %}
     <a href="{% url 'home' %}">Home</a>
     <a href="{% url 'payment' %}">pay test</a>
