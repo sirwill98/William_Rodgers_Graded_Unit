@@ -2,11 +2,14 @@
 {% block title %}Make Booking{% endblock %}
 {% block content %}
 <form action="{% url 'checkout' %}" method="POST">
+    <p>
+        <label>Your Total Cost is: £{{ request.session.num_amount }} For {{ request.session.days }} days of Parking</label><br>
+    </p>
     {% csrf_token %}
     <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
         data-key="pk_test_CjUTf64aBqF2uU2TdROX19aP"
-        data-amount="2000"
-        data-name="{{ context.amount }}"
+        data-amount="{{ request.session.amount }}"
+        data-name="ParkEasy Airport Parking"
         data-description="Parking Space"
         data-image=""
         data-currency="gbp">

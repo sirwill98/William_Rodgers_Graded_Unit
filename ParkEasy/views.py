@@ -31,6 +31,27 @@ def booking_form(request):
                 cust = Customer.objects.get(email=request.user.email)
                 newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length)
                 request.session['booking'] = newbooking1
+                days = length
+                request.session['days'] = days
+                amount = 0
+                if days == 1:
+                    amount = amount + 27
+                elif days == 2:
+                    amount = amount + 39
+                elif days == 3:
+                    amount = amount + 44
+                elif days == 4:
+                    amount = amount + 50
+                elif days == 5:
+                    amount = amount + 55
+                elif days > 5:
+                    amount = amount + 55
+                    while days > 0:
+                        amount = amount + 10
+                        days = days - 1
+                request.session['num_amount'] = amount
+                amount = str(amount) + "00"
+                request.session['amount'] = amount
                 return render(request, 'payment-form.html', {'form': form})
             else:
                 return render(request, 'registration/login.html', {'form': form})
@@ -43,15 +64,14 @@ def booking_form(request):
 
 
 def checkout(request):
-
     new_booking = request.session['booking']
-    amount = request.session['amount']
+
     if request.method == "POST":
         token = request.POST.get("stripeToken")
 
     try:
         charge = stripe.Charge.create(
-            amount=amount,
+            amount=request.session['amount'],
             currency="gbp",
             source=token,
             description="The product charged to the user"
@@ -84,28 +104,12 @@ def signup(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 
-def payment_form(request):
+#amount = 0
 
-    new_booking = request.session['booking']
-    days = new_booking.booking_length
-    amount = 0
-    if days == 1:
-        amount = amount + 27
-    elif days == 2:
-        amount = amount + 39
-    elif days == 3:
-        amount = amount + 44
-    elif days == 4:
-        amount = amount + 50
-    elif days == 5:
-        amount = amount + 55
-    elif days > 5:
-        amount = amount + 55
-        while days > 0:
-            amount = amount + 10
-            days = days - 1
-    context = {"stripe_key": settings.STRIPE_PUBLIC_KEY, "amount": amount}
-    return render(request, "payment-form.html", context)
+
+def payment_form(request):
+    context = {"stripe_key": settings.STRIPE_PUBLIC_KEY}
+    return render(request, "payment-form.html")
 
 
 def edit(request):
