@@ -12,7 +12,7 @@
         <a href="{% url 'login' %}">login to Make Booking</a>
     {% endif %}
     <a href="{% url 'home' %}">Home</a>
-    <a href="{% url 'payment' %}">pay test</a>
+    <a href="{% url 'view-bookings' %}">View Bookings</a>
     <div class="dropdown" style="float:left;">
         <button class="dropbtn">Dropdown</button>
         <div class="dropdown-content" style="left:0;">
@@ -32,6 +32,7 @@
     {% if user.is_superuser %}
         <a href="{% url 'admin:index' %}">Admin</a>
     {% endif %}
+    <a href="{% url 'edit' pk=request.user.id %}">{{ request.user.email }}</a>
     <div class="dropdown" style="float:right;">
         <button class="dropbtn">test</button>
         <div class="dropdown-content">

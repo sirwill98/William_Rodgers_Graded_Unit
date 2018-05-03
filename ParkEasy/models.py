@@ -78,7 +78,7 @@ class Arriving(models.Model):
 
 
 class Payment(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
     date_paid = models.DateTimeField(default=timezone.now)
     card_type = models.TextField(max_length=32)
     card_number = models.TextField(max_length=19)

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import Customer, Booking, Departing, Arriving, Payment
-
+import datetime
 
 class CustomerCreationFormUser(UserCreationForm):
     error_messages = {
@@ -129,10 +129,13 @@ class CustomerChangeFormCustomer(forms.ModelForm):
         model = Customer
         fields = ('email', 'first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
 
+    def save(self, commit=True):
+        customer = super(CustomerChangeFormCustomer, self).save(commit=False)
+
 
 class BookingCreationFormCustomer(forms.ModelForm):
-    Start = forms.DateField(widget=forms.SelectDateWidget)
-    End = forms.DateField(widget=forms.SelectDateWidget)
+    Start = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+    End = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
 
     class Meta:
         model = Booking
@@ -142,3 +145,10 @@ class BookingCreationFormCustomer(forms.ModelForm):
 class TestForm(forms.Form):
     name = forms.CharField(max_length=30)
     email = forms.EmailField(max_length=254)
+
+
+class BookingViewForm(forms.ModelForm):
+    booking_end = forms.DateField(widget=forms.SelectDateWidget)
+    class Meta:
+        model = Booking
+        fields = ('booking_date', 'booking_end')

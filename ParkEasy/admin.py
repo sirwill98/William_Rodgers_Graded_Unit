@@ -36,14 +36,35 @@ class BookingAdmin(ModelAdmin):
     add_form = BookingCreationFormAdmin
     form = BookingChangeFormAdmin
     model = Booking
-    list_display = ['id', 'customer', 'booking_date']
+    readonly_fields = ('payment',)
+
+    def payment(self, booking):
+        payment = 0
+        if booking.booking_length == 1:
+            payment = payment + 27
+        elif booking.booking_length == 2:
+            payment = payment + 39
+        elif booking.booking_length == 3:
+            payment = payment + 44
+        elif booking.booking_length == 4:
+            payment = payment + 50
+        elif booking.booking_length == 5:
+            payment = payment + 55
+        elif booking.booking_length > 5:
+            payment = payment + 55
+            days = booking.booking_length - 5
+            while days > 0:
+                payment = payment + 10
+                days = days - 1
+        return payment
+    list_display = ['id', 'customer', 'booking_date', 'booking_length', 'payment']
     fieldsets = (
-        (None, {'fields': ('booking_date', 'customer',)}),
+        (None, {'fields': ('booking_date', 'customer', 'booking_length', 'payment',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('customer', 'booking_date')}
+            'fields': ('customer', 'booking_date', 'booking_length', 'payment')}
          ),
     )
 
@@ -84,18 +105,18 @@ class PaymentAdmin(ModelAdmin):
     add_form = PaymentCreationFormAdmin
     form = PaymentChangeFormAdmin
     model = Payment
-    list_display = ['customer', 'date_paid', 'card_type', 'card_number', 'amount', 'expiry_date',
+    list_display = ['booking', 'date_paid', 'card_type', 'card_number', 'amount', 'expiry_date',
                     'security_number']
     fieldsets = (
         (None,
-         {'fields': ('customer', 'date_paid', 'amount')}),
+         {'fields': ('booking', 'date_paid', 'amount')}),
         ('Card info',
          {'fields': ('card_type', 'card_number', 'expiry_date', 'security_number')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('customer', 'date_paid', 'card_type', 'card_number', 'amount', 'expiry_date', 'security_number')}
+            'fields': ('booking', 'date_paid', 'card_type', 'card_number', 'amount', 'expiry_date', 'security_number')}
          ),
     )
 

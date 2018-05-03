@@ -1,10 +1,12 @@
 from django.views.generic import ListView
+from django.views.generic.edit import UpdateView
 from .models import Customer, Booking
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
-from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer
+from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer, \
+    CustomerChangeFormAdmin
 from William_Rodgers_Graded_Unit import settings
-from django.template import RequestContext
+from django.forms.models import model_to_dict
 import stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -28,6 +30,9 @@ def booking_form(request):
                 end = form.cleaned_data.get('End')
                 length = end - start
                 length = length.days
+                if length < 0:
+                    return render(request, 'booking.html', {'form': form})
+                    #ADD ERROR MESSAGE
                 cust = Customer.objects.get(email=request.user.email)
                 newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length)
                 request.session['booking'] = newbooking1
@@ -46,6 +51,7 @@ def booking_form(request):
                     amount = amount + 55
                 elif days > 5:
                     amount = amount + 55
+                    days = days - 5
                     while days > 0:
                         amount = amount + 10
                         days = days - 1
@@ -104,23 +110,51 @@ def signup(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 
-#amount = 0
-
-
 def payment_form(request):
     context = {"stripe_key": settings.STRIPE_PUBLIC_KEY}
     return render(request, "payment-form.html")
 
 
 def edit(request):
+    user = Customer.objects.get(email=request.user.email)
+    data = \
+    {
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'address_line1': user.address_line1,
+        'address_line2': user.address_line2,
+        'postcode': user.postcode,
+        'tel_no': user.tel_no
+    }
     if request.method == 'POST':
-        form = CustomerChangeFormCustomer(request.POST)
+        form = CustomerChangeFormCustomer(request, initial=data)
         if form.is_valid():
-            cust = Customer.objects.get(email=request.user.email, first_name=request.user.first_name,
-                                        last_name=request.user.last_name, address_line1=request.user.address_line1,
-                                        address_line2=request.user.address_line2, postcode=request.user.postcode,
-                                        tel_no=request.user.tel_no)
-            return redirect('home')
+            user.email = request.POST['email']
+            user.first_name = request.POST['first_name']
+            user.last_name = request.POST['last_name']
+            user.address_line1 = request.POST['address_line1']
+            user.address_line2 = request.POST['address_line2']
+            user.postcode = request.POST['postcode']
+            user.tel_no = request.POST['tel_no']
+
+            user.save()
+            return render(request, 'ParkEasy/customer_form.html', {'form': form})
     else:
         form = CustomerChangeFormCustomer()
     return render(request, 'registration/signup.html', {'form': form})
+
+
+def view_bookings(request):
+    query_results = Booking.objects.filter(customer=request.user)
+    context = {"query_results": query_results}
+    return render(request, 'view-bookings.html', context)
+
+
+class update_customer(UpdateView):
+    model = Customer
+    fields = ('email', 'first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+
