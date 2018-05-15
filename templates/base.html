@@ -6,6 +6,22 @@
 </head>
 <body>
 <div class="navbar">
+    <div class="dropdown" style="float:left;">
+        <button class="dropbtn">Dropdown</button>
+        <div class="dropdown-content" style="left:0;">
+            <h3>Make a booking</h3>
+            <form method = "POST">
+                {% csrf_token %}
+                {% for field in form %}
+                    <p>
+                        {{ field.label_tag }}<br>
+                        {{ field }}
+                    </p>
+                {% endfor %}
+                <input type="submit" formmethod="post" Value="Make Booking!">
+            </form>
+        </div>
+    </div>
     {% if user.is_authenticated %}
         <a href="{% url 'booking' %}">Make Booking</a>
     {% else %}
@@ -13,26 +29,12 @@
     {% endif %}
     <a href="{% url 'home' %}">Home</a>
     <a href="{% url 'view-bookings' %}">View Bookings</a>
-    <div class="dropdown" style="float:left;">
-        <button class="dropbtn">Dropdown</button>
-        <div class="dropdown-content" style="left:0;">
-            <h3>Make a booking</h3>
-            <form action="" method="POST">
-                Start Date:
-                <input type="date" name="start" title="test">
-                <br>
-                End Date:
-                <input type="date" name="end" title="test">
-                <br>
-                Make Booking:
-                <input type="button" name="create" value="Submit">
-            </form>
-        </div>
-    </div>
     {% if user.is_superuser %}
         <a href="{% url 'admin:index' %}">Admin</a>
     {% endif %}
-    <a href="{% url 'edit' pk=request.user.id %}">{{ request.user.email }}</a>
+    {% if user.is_authenticated %}
+        <a href="{% url 'edit' pk=request.user.id %}">{{ request.user.email }}</a>
+    {% endif %}
     <div class="dropdown" style="float:right;">
         <button class="dropbtn">test</button>
         <div class="dropdown-content">

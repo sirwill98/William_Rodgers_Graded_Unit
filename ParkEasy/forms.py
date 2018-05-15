@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Customer, Booking, Departing, Arriving, Payment
+from .models import Customer, Booking, Departing, Arriving, Payment, Prices
 import datetime
+
 
 class CustomerCreationFormUser(UserCreationForm):
     error_messages = {
@@ -124,13 +125,36 @@ class PaymentChangeFormAdmin(forms.ModelForm):
         fields = '__all__'
 
 
-class CustomerChangeFormCustomer(forms.ModelForm):
+class PriceCreationFormAdmin(forms.ModelForm):
+
+    vip = forms.IntegerField()
+    valet = forms.IntegerField()
+    day = forms.FloatField()
+    base = forms.IntegerField()
+    after_five = forms.IntegerField()
+
+    class Meta:
+        model = Prices
+        fields = ('id',)
+
+
+class PriceChangeFormAdmin(forms.ModelForm):
+    class Meta:
+        model = Prices
+        fields = '__all__'
+
+
+class CustomerChangeFormCustomer(UserCreationForm):
     class Meta:
         model = Customer
-        fields = ('email', 'first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
+        fields = ('first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
+        exclude = {'email'}
 
     def save(self, commit=True):
         customer = super(CustomerChangeFormCustomer, self).save(commit=False)
+        if commit:
+            customer.save()
+        return customer
 
 
 class BookingCreationFormCustomer(forms.ModelForm):
@@ -142,13 +166,14 @@ class BookingCreationFormCustomer(forms.ModelForm):
         fields = ('Start', 'End')
 
 
-class TestForm(forms.Form):
-    name = forms.CharField(max_length=30)
-    email = forms.EmailField(max_length=254)
+class BaseForm(forms.Form):
+    Start = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+    End = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
 
 
 class BookingViewForm(forms.ModelForm):
     booking_end = forms.DateField(widget=forms.SelectDateWidget)
+
     class Meta:
         model = Booking
         fields = ('booking_date', 'booking_end')

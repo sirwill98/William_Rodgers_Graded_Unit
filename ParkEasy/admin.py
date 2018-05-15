@@ -5,8 +5,9 @@ from .forms import CustomerCreationFormAdmin, CustomerChangeFormAdmin, \
     BookingCreationFormAdmin, BookingChangeFormAdmin, \
     DepartingCreationFormAdmin, DepartingChangeFormAdmin, \
     ArrivingCreationFormAdmin, ArrivingChangeFormAdmin, \
-    PaymentCreationFormAdmin, PaymentChangeFormAdmin
-from .models import Customer, Booking, Departing, Arriving, Payment
+    PaymentCreationFormAdmin, PaymentChangeFormAdmin, \
+    PriceCreationFormAdmin, PriceChangeFormAdmin
+from .models import Customer, Booking, Departing, Arriving, Payment, Prices
 
 
 class CustomerAdmin(UserAdmin):
@@ -105,18 +106,32 @@ class PaymentAdmin(ModelAdmin):
     add_form = PaymentCreationFormAdmin
     form = PaymentChangeFormAdmin
     model = Payment
-    list_display = ['booking', 'date_paid', 'card_type', 'card_number', 'amount', 'expiry_date',
-                    'security_number']
+    list_display = ['booking', 'date_paid', 'amount', 'paid']
     fieldsets = (
         (None,
-         {'fields': ('booking', 'date_paid', 'amount')}),
-        ('Card info',
-         {'fields': ('card_type', 'card_number', 'expiry_date', 'security_number')}),
+         {'fields': ('booking', 'date_paid', 'amount', 'paid')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('booking', 'date_paid', 'card_type', 'card_number', 'amount', 'expiry_date', 'security_number')}
+            'fields': ('booking', 'date_paid', 'amount', 'paid')}
+         ),
+    )
+
+
+class PriceAdmin(ModelAdmin):
+    add_form = PriceCreationFormAdmin
+    form = PriceChangeFormAdmin
+    model = Prices
+    list_display = ['id', 'vip', 'valet', 'day', 'base', 'after_five']
+    fieldsets = (
+        (None,
+         {'fields': ('vip', 'valet', 'day', 'base', 'after_five')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('vip', 'valet', 'day', 'base', 'after_five')}
          ),
     )
 
@@ -126,3 +141,4 @@ admin.site.register(Booking, BookingAdmin)
 admin.site.register(Departing, DepartingAdmin)
 admin.site.register(Arriving, ArrivingAdmin)
 admin.site.register(Payment, PaymentAdmin)
+admin.site.register(Prices, PriceAdmin)
