@@ -148,7 +148,7 @@ class CustomerChangeFormCustomer(UserCreationForm):
     class Meta:
         model = Customer
         fields = ('first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
-        exclude = {'email'}
+        exclude = {'email', 'password1', 'password', 'password2'}
 
     def save(self, commit=True):
         customer = super(CustomerChangeFormCustomer, self).save(commit=False)

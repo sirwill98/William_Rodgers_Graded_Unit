@@ -9,7 +9,7 @@ urlpatterns = [
     path('signup/', signup, name="signup"),
     path('payment-form/', payment_form, name="payment"),
     path('checkout/', checkout, name="checkout"),
-    path('edit/<int:pk>/', views.update_customer.as_view(), name="edit"),
+    path('edit/', views.edit, name="edit"),
     path('view-bookings/', view_bookings, name="view-bookings")
 
 ]
