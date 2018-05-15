@@ -37,35 +37,14 @@ class BookingAdmin(ModelAdmin):
     add_form = BookingCreationFormAdmin
     form = BookingChangeFormAdmin
     model = Booking
-    readonly_fields = ('payment',)
-
-    def payment(self, booking):
-        payment = 0
-        if booking.booking_length == 1:
-            payment = payment + 27
-        elif booking.booking_length == 2:
-            payment = payment + 39
-        elif booking.booking_length == 3:
-            payment = payment + 44
-        elif booking.booking_length == 4:
-            payment = payment + 50
-        elif booking.booking_length == 5:
-            payment = payment + 55
-        elif booking.booking_length > 5:
-            payment = payment + 55
-            days = booking.booking_length - 5
-            while days > 0:
-                payment = payment + 10
-                days = days - 1
-        return payment
-    list_display = ['id', 'customer', 'booking_date', 'booking_length', 'payment']
+    list_display = ['id', 'customer', 'prices', 'booking_date', 'booking_length']
     fieldsets = (
-        (None, {'fields': ('booking_date', 'customer', 'booking_length', 'payment',)}),
+        (None, {'fields': ('booking_date', 'customer', 'prices', 'booking_length',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('customer', 'booking_date', 'booking_length', 'payment')}
+            'fields': ('customer', 'prices', 'booking_date', 'booking_length')}
          ),
     )
 
@@ -123,15 +102,15 @@ class PriceAdmin(ModelAdmin):
     add_form = PriceCreationFormAdmin
     form = PriceChangeFormAdmin
     model = Prices
-    list_display = ['id', 'vip', 'valet', 'day', 'base', 'after_five']
+    list_display = ['id', 'vip', 'valet', 'day', 'base', 'after_five', 'is_current']
     fieldsets = (
         (None,
-         {'fields': ('vip', 'valet', 'day', 'base', 'after_five')}),
+         {'fields': ('vip', 'valet', 'day', 'base', 'after_five', 'is_current')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('vip', 'valet', 'day', 'base', 'after_five')}
+            'fields': ('vip', 'valet', 'day', 'base', 'after_five', 'is_current')}
          ),
     )
 

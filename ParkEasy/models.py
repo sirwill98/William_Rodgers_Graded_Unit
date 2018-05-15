@@ -45,16 +45,8 @@ class Prices(models.Model):
     day = models.FloatField(default=1.2)
     base = models.IntegerField(default=27)
     after_five = models.IntegerField(default=10)
-    start_date = models.DateField(default=timezone.now)
-    length = models.IntegerField(default=365)
+    is_current = models.BooleanField(default=False)
 
-    def calc_start_date(self, Prices):
-        for e in Prices.objects.all():
-            max_date = date.min
-            if e.start_date + timedelta(days=e.length) > max_date:
-                max_date = e.start_date + timedelta(days=e.length)
-                print(max_date)
-                return e.id
 
 class Customer(AbstractUser):
     password = models.TextField(max_length=100, default="")
@@ -79,16 +71,30 @@ class Customer(AbstractUser):
 
 class Booking(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    prices = models.ForeignKey(Prices, on_delete=models.CASCADE, default=90)
+    prices = models.ForeignKey(Prices, on_delete=models.CASCADE, default=1)
     booking_date = models.DateField(default=timezone.now)
     booking_length = models.IntegerField(default=0)
-    def getprice(self, prices):
-        Prices.calc_start_date()
-    #def getprice(self, Prices):
-     #   priceset = Prices.objects.get()
-      #  for index, Prices in enumerate(priceset, start=0):
-       #     if (index, priceset).prices.calc_start_date() == 1:
-        #        print("bleh")  #add logic
+
+    def calc_amount(self, prices, days):
+        amount = prices.base
+        print("test")
+        if days == 2:
+            amount = amount * prices.day
+        elif days == 3:
+            amount = amount * prices.day**2
+        elif days == 4:
+            amount = amount * prices.day**3
+        elif days == 5:
+            amount = amount * prices.day**4
+        elif days > 5:
+            amount = amount * prices.day**5
+            days = days - 5
+            while days > 0:
+                amount = amount + prices.after_five
+                days = days - 1
+        return int(amount)
+
+
 
 class Departing(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)

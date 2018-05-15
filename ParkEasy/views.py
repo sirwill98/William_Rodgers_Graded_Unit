@@ -1,6 +1,6 @@
 from django.views.generic import ListView
 from django.views.generic.edit import UpdateView
-from .models import Customer, Booking
+from .models import Customer, Booking, Prices
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer, \
@@ -15,45 +15,6 @@ from django.core.mail import send_mail
 def HomePageView(request):
     if request.POST:
         form = BookingCreationFormCustomer(request.POST)
-        if form.is_valid():
-            if request.user.is_authenticated:
-                start = form.cleaned_data.get('Start')
-                end = form.cleaned_data.get('End')
-                length = end - start
-                length = length.days
-                if length < 0:
-                    return render(request, 'home.html', {'form': form})
-                    # ADD ERROR MESSAGE
-                cust = Customer.objects.get(email=request.user.email)
-                newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length)
-                request.session['booking'] = newbooking1
-                days = length
-                request.session['days'] = days
-                amount = 0
-                if days == 1:
-                    amount = amount + 27
-                elif days == 2:
-                    amount = amount + 39
-                elif days == 3:
-                    amount = amount + 44
-                elif days == 4:
-                    amount = amount + 50
-                elif days == 5:
-                    amount = amount + 55
-                elif days > 5:
-                    amount = amount + 55
-                    days = days - 5
-                    while days > 0:
-                        amount = amount + 10
-                        days = days - 1
-                request.session['num_amount'] = amount
-                amount = str(amount) + "00"
-                request.session['amount'] = amount
-                return render(request, 'payment-form.html', {'form': form})
-            else:
-                return render(request, 'registration/login.html', {'form': form})
-        else:
-            return render(request, 'home.html', {'form': form})
     else:
         form = BookingCreationFormCustomer()
 
@@ -78,27 +39,12 @@ def booking_form(request):
                     return render(request, 'booking.html', {'form': form})
                     #ADD ERROR MESSAGE
                 cust = Customer.objects.get(email=request.user.email)
-                newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length)
+                price = Prices.objects.get(is_current=True)
+                newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length, prices=price)
                 request.session['booking'] = newbooking1
                 days = length
                 request.session['days'] = days
-                amount = 0
-                if days == 1:
-                    amount = amount + 27
-                elif days == 2:
-                    amount = amount + 39
-                elif days == 3:
-                    amount = amount + 44
-                elif days == 4:
-                    amount = amount + 50
-                elif days == 5:
-                    amount = amount + 55
-                elif days > 5:
-                    amount = amount + 55
-                    days = days - 5
-                    while days > 0:
-                        amount = amount + 10
-                        days = days - 1
+                amount = Booking.calc_amount(newbooking1, price, length)
                 request.session['num_amount'] = amount
                 request.session['amount'] = str(amount) + "00"
                 return render(request, 'payment-form.html', {'form': form})
@@ -183,14 +129,7 @@ def edit(request):
 
 def view_bookings(request):
     query_results = Booking.objects.filter(customer=request.user)
+    #for e in query_results:
+
     context = {"query_results": query_results}
     return render(request, 'view-bookings.html', context)
-
-
-class update_customer(UpdateView):
-    model = Customer
-    fields = ('email', 'first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
-
-    def get_object(self):
-        pk = self.kwargs['pk']
-

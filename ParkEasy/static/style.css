@@ -67,3 +67,8 @@
 .dropdown:hover .dropdown-content {
   display: block;
 }
+
+table, th, td
+{
+  border: 1px solid black;
+}
