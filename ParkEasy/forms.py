@@ -144,7 +144,7 @@ class PriceChangeFormAdmin(forms.ModelForm):
         fields = '__all__'
 
 
-class CustomerChangeFormCustomer(UserCreationForm):
+class CustomerChangeFormCustomer(UserChangeForm):
     class Meta:
         model = Customer
         fields = ('first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
