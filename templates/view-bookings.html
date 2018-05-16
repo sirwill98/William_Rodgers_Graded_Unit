@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>View Bookings</h2>
+  <form method="post">
+    {% csrf_token %}
+    {% for item in query_results %}
+      <p>
+        <br>
+        <table>
+            <tr>
+                <th><h3>Customer Booking</h3></th>
+                <th><h3>Date Of Beginning</h3></th>
+                <th><h3>length of booking(change to calculated end date)</h3></th>
+            </tr>
+            <tr>
+                <td>
+                    {{ item.customer }}
+                    {% if item.help_text %}
+                        <small style="color: grey">{{ item.help_text }}</small>
+                    {% endif %}
+                    {% for error in item.errors %}
+                        <p style="color: red">{{ error }}</p>
+                    {% endfor %}
+                </td>
+                <td>
+                    {{ item.booking_date }}
+                    {% if item.help_text %}
+                      <small style="color: grey">{{ item.help_text }}</small>
+                    {% endif %}
+                    {% for error in item.errors %}
+                      <p style="color: red">{{ error }}</p>
+                    {% endfor %}
+                </td>
+                <td>
+                    {{ item.booking_length }}
+                    {% if item.help_text %}
+                      <small style="color: grey">{{ item.help_text }}</small>
+                    {% endif %}
+                    {% for error in item.errors %}
+                      <p style="color: red">{{ error }}</p>
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+      </p>
+    {% endfor %}
+  </form>
+{% endblock %}

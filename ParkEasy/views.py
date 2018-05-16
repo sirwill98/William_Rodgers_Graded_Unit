@@ -44,7 +44,7 @@ def booking_form(request):
                 request.session['booking'] = newbooking1
                 days = length
                 request.session['days'] = days
-                amount = Booking.calc_amount(newbooking1, price, length)
+                amount = Booking.calc_amount(newbooking1, length)
                 request.session['num_amount'] = amount
                 request.session['amount'] = str(amount) + "00"
                 return render(request, 'payment-form.html', {'form': form})

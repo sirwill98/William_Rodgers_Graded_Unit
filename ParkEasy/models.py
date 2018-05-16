@@ -75,7 +75,8 @@ class Booking(models.Model):
     booking_date = models.DateField(default=timezone.now)
     booking_length = models.IntegerField(default=0)
 
-    def calc_amount(self, prices, days):
+    def calc_amount(self, days):
+        prices = Prices.objects.get(id=self.prices.id)
         amount = prices.base
         print("test")
         if days == 2:
