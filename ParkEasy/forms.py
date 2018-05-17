@@ -147,8 +147,8 @@ class PriceChangeFormAdmin(forms.ModelForm):
 class CustomerChangeFormCustomer(UserChangeForm):
     class Meta:
         model = Customer
-        fields = ('first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no')
-        exclude = {'email', 'password1', 'password', 'password2'}
+        fields = ('first_name', 'last_name', 'address_line1', 'address_line2', 'postcode', 'tel_no', 'password')
+        exclude = {'email', 'password1', 'password2'}
 
     def save(self, commit=True):
         customer = super(CustomerChangeFormCustomer, self).save(commit=False)
@@ -177,3 +177,4 @@ class BookingViewForm(forms.ModelForm):
     class Meta:
         model = Booking
         fields = ('booking_date', 'booking_end')
+

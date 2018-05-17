@@ -1,10 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+<!-- THIS NEEDS FIXED-->
+{% extends 'base.html' %}
+{% block title %}Additional services{% endblock %}
+{% block content %}
+    <h3>Pick any additional services</h3>
+    <form method = "POST">
+        {% csrf_token %}
+        {% for field in form %}
+            <p>
+                {{ field.label_tag }}<br>
+                {{ field }}
+            </p>
+        {% endfor %}
+        <input type="submit" formmethod="post" Value="Make Booking!">
+    </form>
+{% endblock %}

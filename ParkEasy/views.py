@@ -1,15 +1,16 @@
 from django.views.generic import ListView
-from django.views.generic.edit import UpdateView
 from .models import Customer, Booking, Prices
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
-from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer, \
-    CustomerChangeFormAdmin, BaseForm
+from django.contrib.auth import login, authenticate, logout
+from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer
 from William_Rodgers_Graded_Unit import settings
 from datetime import timedelta
 import stripe
-stripe.api_key = settings.STRIPE_SECRET_KEY
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.core.mail import send_mail
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def HomePageView(request):
@@ -19,6 +20,23 @@ def HomePageView(request):
         form = BookingCreationFormCustomer()
 
     return render(request, 'home.html', {'form': form})
+
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('change_password')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'registration/change_password.html', {
+        'form': form
+    })
 
 
 class BookingView(ListView):
@@ -121,15 +139,48 @@ def edit(request):
         form = CustomerChangeFormCustomer(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
-            return render(request, 'home.html')
+            return redirect('home')
     else:
-        form = CustomerChangeFormCustomer()
-        return render(request, 'registration/signup.html', {'form': form})
+        form = CustomerChangeFormCustomer(instance=request.user)
+    return render(request, 'ParkEasy/edit_form_customer.html', {'form': form})
+
+
+def edit_booking(request, id):
+    if request.method == 'POST':
+        form = BookingCreationFormCustomer(instance=Booking.objects.get(id=id))
+        if form.is_valid():
+            form.save()
+            query_results = Booking.objects.filter(customer=request.user)
+            context = {"query_results": query_results}
+            return render(request, 'view-bookings.html', context)
+        else:
+            form = BookingCreationFormCustomer()
+            obj = Booking.objects.get(id=id)
+            context = obj.booking_length
+            return render(request, 'ParkEasy/edit_form.html', {'form': form}, context)
+    else:
+        #form = BookingCreationFormCustomer(instance=Booking.objects.get(id=id))
+        query_results = Booking.objects.filter(customer=request.user)
+        context = {"query_results": query_results}
+        return render(request, 'view-bookings.html', context)
 
 
 def view_bookings(request):
     query_results = Booking.objects.filter(customer=request.user)
-    #for e in query_results:
-
     context = {"query_results": query_results}
     return render(request, 'view-bookings.html', context)
+
+
+def delete_booking(request, id):
+    booking = Booking.objects.get(id=id)
+    booking.delete()
+    query_results = Booking.objects.filter(customer=request.user)
+    context = {"query_results": query_results}
+    return render(request, 'view-bookings.html', context)
+
+
+def delete_account(request):
+    cust = request.user
+    cust.delete()
+    logout(request)
+    return render(request, 'home.html')

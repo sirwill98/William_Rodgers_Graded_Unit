@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Edit Details</h2>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" formmethod="post" Value="Edit Customer!">
+  </form>
+  <form action="{% url 'password-change'%}">
+    <input type="submit" value="Change Password" />
+  </form>
+  <form action = "{% url 'delete-account'%}" method = "POST">
+    {% csrf_token %}
+    <input type="submit" name="delete-account" formmethod="post" Value="Delete Account">
+  </form>
+{% endblock %}
