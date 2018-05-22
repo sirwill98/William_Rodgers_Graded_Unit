@@ -10,6 +10,16 @@
                 {{ field }}
             </p>
         {% endfor %}
+        {% if error in request %}
+            <h3></h3>
+        {% endif %}
         <input type="submit" formmethod="post" Value="Make Booking!">
     </form>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}

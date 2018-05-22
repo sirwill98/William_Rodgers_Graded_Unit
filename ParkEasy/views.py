@@ -2,7 +2,8 @@ from django.views.generic import ListView
 from .models import Customer, Booking, Prices
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
-from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer
+from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer, \
+    BookingEditFormCustomer
 from William_Rodgers_Graded_Unit import settings
 from datetime import timedelta
 import stripe
@@ -53,9 +54,9 @@ def booking_form(request):
                 end = form.cleaned_data.get('End')
                 length = end - start
                 length = length.days
-                if length < 0:
+                if length <= 0:
+                    messages.add_message(request, messages.INFO, 'Bookings must be more than 0 days')
                     return render(request, 'booking.html', {'form': form})
-                    #ADD ERROR MESSAGE
                 cust = Customer.objects.get(email=request.user.email)
                 price = Prices.objects.get(is_current=True)
                 newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length, prices=price)
@@ -65,6 +66,9 @@ def booking_form(request):
                 amount = Booking.calc_amount(newbooking1, length)
                 request.session['num_amount'] = amount
                 request.session['amount'] = str(amount) + "00"
+                if Booking.objects.count() == 2000:
+                    messages.add_message(request, messages.INFO, 'There are no spaces currently available')
+                    return render(request, 'booking.html', {'form': form})
                 return render(request, 'payment-form.html', {'form': form})
             else:
                 return render(request, 'registration/login.html', {'form': form})
@@ -97,6 +101,7 @@ def checkout(request):
 
     else:
         new_booking.save()
+
         send_mail(
             'ParkEasy Parking Booking',
             'thank you '+request.user.email+' for creating a booking with ParkEasy below are details of your booking'
@@ -147,22 +152,16 @@ def edit(request):
 
 def edit_booking(request, id):
     if request.method == 'POST':
-        form = BookingCreationFormCustomer(instance=Booking.objects.get(id=id))
+        book = Booking.objects.get(id=id)
+        form = BookingEditFormCustomer(request.POST, book.booking_length, book.booking_date)
         if form.is_valid():
             form.save()
             query_results = Booking.objects.filter(customer=request.user)
             context = {"query_results": query_results}
             return render(request, 'view-bookings.html', context)
-        else:
-            form = BookingCreationFormCustomer()
-            obj = Booking.objects.get(id=id)
-            context = obj.booking_length
-            return render(request, 'ParkEasy/edit_form.html', {'form': form}, context)
     else:
-        #form = BookingCreationFormCustomer(instance=Booking.objects.get(id=id))
-        query_results = Booking.objects.filter(customer=request.user)
-        context = {"query_results": query_results}
-        return render(request, 'view-bookings.html', context)
+        form = BookingEditFormCustomer()
+    return render(request, 'ParkEasy/edit_form.html', {'form': form})
 
 
 def view_bookings(request):
@@ -176,6 +175,7 @@ def delete_booking(request, id):
     booking.delete()
     query_results = Booking.objects.filter(customer=request.user)
     context = {"query_results": query_results}
+    messages.add_message(request, messages.INFO, 'Booking successfully deleted')
     return render(request, 'view-bookings.html', context)
 
 
@@ -183,4 +183,5 @@ def delete_account(request):
     cust = request.user
     cust.delete()
     logout(request)
+    messages.add_message(request, messages.INFO, 'Customer successfully deleted')
     return render(request, 'home.html')

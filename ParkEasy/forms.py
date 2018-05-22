@@ -178,3 +178,23 @@ class BookingViewForm(forms.ModelForm):
         model = Booking
         fields = ('booking_date', 'booking_end')
 
+
+class BookingEditFormCustomer(forms.ModelForm):
+
+    class Meta:
+        model = Booking
+        fields = ('booking_date', 'booking_length')
+
+    def __init__(self, booking_date, booking_length, *args, **kwargs):
+        super(BookingEditFormCustomer, self).__init__(*args, **kwargs)
+
+        # set the user_id as an attribute of the form
+        self.booking_date = booking_date
+        self.booking_length = booking_length
+
+    def clean_booking_date(self):
+        bk_date = self.cleaned_data.get("booking_date")
+
+        if bk_date < datetime.date.today():
+            raise forms.ValidationError("The date cannot be in the past!")
+        return bk_date

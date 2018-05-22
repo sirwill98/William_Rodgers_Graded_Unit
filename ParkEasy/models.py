@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
-from datetime import timedelta
-from datetime import date
 
 
 class UserManager(BaseUserManager):
@@ -95,6 +93,11 @@ class Booking(models.Model):
                 days = days - 1
         return int(amount)
 
+    def save(self, *args, **kwargs):
+        if Booking.objects.count() >= 2000:
+            return False
+        else:
+            super(Booking, self).save(*args, **kwargs)
 
 
 class Departing(models.Model):
