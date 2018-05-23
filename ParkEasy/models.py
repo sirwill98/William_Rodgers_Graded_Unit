@@ -37,6 +37,12 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+class Vehicle(models.Model):
+    reg_no = models.TextField(max_length=7)
+    make = models.TextField()
+    manufacturer = models.TextField()
+
+
 class Prices(models.Model):
     vip = models.IntegerField(default=0)
     valet = models.IntegerField(default=0)
@@ -70,6 +76,7 @@ class Customer(AbstractUser):
 class Booking(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     prices = models.ForeignKey(Prices, on_delete=models.CASCADE, default=1)
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
     booking_date = models.DateField(default=timezone.now)
     booking_length = models.IntegerField(default=0)
 
