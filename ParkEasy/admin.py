@@ -5,9 +5,9 @@ from .forms import CustomerCreationFormAdmin, CustomerChangeFormAdmin, \
     BookingCreationFormAdmin, BookingChangeFormAdmin, \
     DepartingCreationFormAdmin, DepartingChangeFormAdmin, \
     ArrivingCreationFormAdmin, ArrivingChangeFormAdmin, \
-    PaymentCreationFormAdmin, PaymentChangeFormAdmin, \
-    PriceCreationFormAdmin, PriceChangeFormAdmin
-from .models import Customer, Booking, Departing, Arriving, Payment, Prices
+    PriceCreationFormAdmin, PriceChangeFormAdmin,\
+    VehicleCreationFormAdmin, VehicleChangeFormAdmin
+from .models import Customer, Booking, Departing, Arriving, Prices, Vehicle
 
 
 class CustomerAdmin(UserAdmin):
@@ -37,14 +37,14 @@ class BookingAdmin(ModelAdmin):
     add_form = BookingCreationFormAdmin
     form = BookingChangeFormAdmin
     model = Booking
-    list_display = ['id', 'customer', 'prices', 'booking_date', 'booking_length']
+    list_display = ['id', 'customer', 'prices', 'vehicle', 'booking_date', 'booking_length']
     fieldsets = (
-        (None, {'fields': ('booking_date', 'customer', 'prices', 'booking_length',)}),
+        (None, {'fields': ('booking_date', 'customer', 'prices', 'vehicle', 'booking_length',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('customer', 'prices', 'booking_date', 'booking_length')}
+            'fields': ('customer', 'prices', 'vehicle', 'booking_date', 'booking_length')}
          ),
     )
 
@@ -81,23 +81,6 @@ class ArrivingAdmin(ModelAdmin):
     )
 
 
-class PaymentAdmin(ModelAdmin):
-    add_form = PaymentCreationFormAdmin
-    form = PaymentChangeFormAdmin
-    model = Payment
-    list_display = ['booking', 'date_paid', 'amount', 'paid']
-    fieldsets = (
-        (None,
-         {'fields': ('booking', 'date_paid', 'amount', 'paid')}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('booking', 'date_paid', 'amount', 'paid')}
-         ),
-    )
-
-
 class PriceAdmin(ModelAdmin):
     add_form = PriceCreationFormAdmin
     form = PriceChangeFormAdmin
@@ -114,10 +97,26 @@ class PriceAdmin(ModelAdmin):
          ),
     )
 
+class VehicleAdmin(ModelAdmin):
+    add_form = VehicleCreationFormAdmin
+    form = VehicleChangeFormAdmin
+    model = Vehicle
+    list_display = ['id', 'reg_no', 'make', 'manufacturer']
+    fieldsets = (
+        (None,
+         {'fields': ('reg_no', 'make', 'manufacturer')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('reg_no', 'make', 'manufacturer')}
+         ),
+    )
+
 
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Booking, BookingAdmin)
 admin.site.register(Departing, DepartingAdmin)
 admin.site.register(Arriving, ArrivingAdmin)
-admin.site.register(Payment, PaymentAdmin)
 admin.site.register(Prices, PriceAdmin)
+admin.site.register(Vehicle, VehicleAdmin)

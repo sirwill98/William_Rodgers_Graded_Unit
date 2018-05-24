@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Add Vehicle{% endblock %}
+{% block content %}
+    <h3>Add a Vehicle</h3>
+    <form method = "POST">
+        {% csrf_token %}
+        {% for field in form %}
+            <p>
+                {{ field.label_tag }}<br>
+                {{ field }}
+            </p>
+        {% endfor %}
+        {% if error in request %}
+            <h3></h3>
+        {% endif %}
+        <input type="submit" formmethod="post" Value="Add Vehicle!">
+    </form>
+{% endblock %}

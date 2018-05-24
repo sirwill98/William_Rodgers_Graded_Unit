@@ -2,11 +2,12 @@
 from . import views
 from django.urls import path
 from .views import booking_form, signup, payment_form, checkout, view_bookings, delete_booking, edit_booking, \
-    change_password, delete_account
+    change_password, delete_account, vehicle_form
 
 urlpatterns = [
     path('', views.HomePageView, name='home'),
     path('booking/', booking_form, name="booking"),
+    path('vehicle/', vehicle_form, name="vehicle"),
     path('signup/', signup, name="signup"),
     path('payment-form/', payment_form, name="payment"),
     path('checkout/', checkout, name="checkout"),

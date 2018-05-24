@@ -12,7 +12,9 @@
         <tr>
             <th><h3>Customer</h3></th>
             <th><h3>Date Of Beginning</h3></th>
-            <th><h3>change to calculated end date</h3></th>
+            <th><h3>Length of booking in days</h3></th>
+            <th><h3>Vehicle Related To Booking</h3></th>
+            <th><h3>Vehicle Registration Number</h3></th>
             <th><h3>edit booking</h3></th>
             <th><h3>delete booking</h3></th>
         </tr>
@@ -38,6 +40,24 @@
             </td>
             <td>
                 {{ item.booking_length }}
+                {% if item.help_text %}
+                  <small style="color: grey">{{ item.help_text }}</small>
+                {% endif %}
+                {% for error in item.errors %}
+                  <p style="color: red">{{ error }}</p>
+                {% endfor %}
+            </td>
+            <td>
+                {{ item.vehicle }}
+                {% if item.help_text %}
+                  <small style="color: grey">{{ item.help_text }}</small>
+                {% endif %}
+                {% for error in item.errors %}
+                  <p style="color: red">{{ error }}</p>
+                {% endfor %}
+            </td>
+            <td>
+                {{ item.vehicle.reg_no }}
                 {% if item.help_text %}
                   <small style="color: grey">{{ item.help_text }}</small>
                 {% endif %}

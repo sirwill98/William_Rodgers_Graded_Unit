@@ -42,6 +42,9 @@ class Vehicle(models.Model):
     make = models.TextField()
     manufacturer = models.TextField()
 
+    def __str__(self):
+        return 'Vehicle: ' + self.manufacturer + ' ' + self.make
+
 
 class Prices(models.Model):
     vip = models.IntegerField(default=0)
@@ -79,6 +82,7 @@ class Booking(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
     booking_date = models.DateField(default=timezone.now)
     booking_length = models.IntegerField(default=0)
+    date_created = models.DateField(default=timezone.now)
 
     def calc_amount(self, days):
         prices = Prices.objects.get(id=self.prices.id)

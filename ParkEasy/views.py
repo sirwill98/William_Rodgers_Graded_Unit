@@ -1,12 +1,13 @@
 from django.views.generic import ListView
 import xlwt
-from .models import Customer, Booking, Prices
+from .models import Customer, Booking, Prices, Vehicle
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer, \
-    BookingEditFormCustomer
+    BookingEditFormCustomer, VehicleCreationFormCustomer
 from William_Rodgers_Graded_Unit import settings
-from datetime import timedelta
+from datetime import timedelta, datetime
+from django.utils import timezone
 import stripe
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
@@ -46,6 +47,37 @@ class BookingView(ListView):
     template_name = 'booking.html'
 
 
+def vehicle_form(request):
+    if request.POST:
+        form = VehicleCreationFormCustomer(request.POST)
+        if form.is_valid():
+            if request.user.is_authenticated:
+                #get vehicle data from form
+                reg_no = form.cleaned_data.get('reg_no')
+                make = form.cleaned_data.get('make')
+                manufacturer = form.cleaned_data.get('manufacturer')
+                #get logged in customer
+                cust = Customer.objects.get(email=request.user.email)
+                #get current prices
+                vehicle = Vehicle(reg_no=reg_no, make=make, manufacturer=manufacturer)
+                price = Prices.objects.get(is_current=True)
+                newbooking1 = Booking(customer=cust, booking_date=request.session['booking_date'],
+                                      booking_length=request.session['booking_length'], prices=price, vehicle=vehicle)
+                request.session['vehicle'] = vehicle
+                request.session['booking'] = newbooking1
+                amount = Booking.calc_amount(newbooking1, request.session['booking_length'])
+                request.session['num_amount'] = amount
+                request.session['amount'] = str(amount) + "00"
+                return render(request, 'payment-form.html', {'form': form})
+            else:
+                return render(request, 'registration/login.html', {'form': form})
+        else:
+            return render(request, 'vehicle.html', {'form': form})
+    else:
+        form = VehicleCreationFormCustomer()
+    return render(request, 'vehicle.html', {'form': form})
+
+
 def booking_form(request):
     if request.POST:
         form = BookingCreationFormCustomer(request.POST)
@@ -58,19 +90,15 @@ def booking_form(request):
                 if length <= 0:
                     messages.add_message(request, messages.INFO, 'Bookings must be more than 0 days')
                     return render(request, 'booking.html', {'form': form})
-                cust = Customer.objects.get(email=request.user.email)
-                price = Prices.objects.get(is_current=True)
-                newbooking1 = Booking(customer=cust, booking_date=start, booking_length=length, prices=price)
-                request.session['booking'] = newbooking1
+                request.session['booking_date'] = start
+                request.session['booking_length'] = length
                 days = length
                 request.session['days'] = days
-                amount = Booking.calc_amount(newbooking1, length)
-                request.session['num_amount'] = amount
-                request.session['amount'] = str(amount) + "00"
                 if Booking.objects.count() == 2000:
                     messages.add_message(request, messages.INFO, 'There are no spaces currently available')
                     return render(request, 'booking.html', {'form': form})
-                return render(request, 'payment-form.html', {'form': form})
+                form = VehicleCreationFormCustomer()
+                return redirect("vehicle")
             else:
                 return render(request, 'registration/login.html', {'form': form})
         else:
@@ -83,6 +111,7 @@ def booking_form(request):
 
 def checkout(request):
     new_booking = request.session['booking']
+    vehicle = request.session['vehicle']
 
     if request.method == "POST":
         token = request.POST.get("stripeToken")
@@ -101,6 +130,9 @@ def checkout(request):
         return False, ce
 
     else:
+        vehicle.save()
+        new_booking.vehicle = vehicle
+        new_booking.date_booked = timezone.now()
         new_booking.save()
 
         send_mail(
@@ -168,6 +200,7 @@ def edit_booking(request, id):
 def view_bookings(request):
     query_results = Booking.objects.filter(customer=request.user)
     context = {"query_results": query_results}
+    generate_weekly_report(request)
     return render(request, 'view-bookings.html', context)
 
 
@@ -186,3 +219,30 @@ def delete_account(request):
     logout(request)
     messages.add_message(request, messages.INFO, 'Customer successfully deleted')
     return render(request, 'home.html')
+
+
+def generate_weekly_report(request):
+    #make conditional and use session variables for dates
+    #options for WEEK, TIME PERIOD, OCCUPANCY REPORT
+    #calculate when the last week started and ended
+    today = datetime.today()
+    weekday = today.weekday()
+    start_delta = timedelta(days=weekday, weeks=1)
+    start_of_week = today - start_delta
+    end_of_week = start_of_week + timedelta(days=6)
+    booking_set = Booking.objects.filter(date_created__gte=start_of_week, date_created__lte=end_of_week)
+    #define the excel document
+    wb = xlwt.Workbook()
+    ws = wb.add_sheet('Bookings for week ' + str(start_of_week.date()))
+    for i, booking in enumerate(booking_set):
+        ws.write(i, 0, str(booking.id))
+        ws.write(i, 1, str(booking.customer))
+        ws.write(i, 2, str(booking.vehicle))
+        ws.write(i, 3, str(booking.booking_date))
+        ws.write(i, 4, str(booking.booking_length))
+        ws.write(i, 5, str(booking.date_created))
+        ws.write(i, 6, str(booking.calc_amount(booking.booking_length)))
+    wb.save('C:/Users/Billy/Documents/django_reports/' + 'Bookings for week ' + str(start_of_week.date()) + '.xls')
+    query_results = Booking.objects.filter(customer=request.user)
+    context = {"query_results": query_results}
+    return render(request, 'view-bookings.html', context)

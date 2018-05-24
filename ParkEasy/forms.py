@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Customer, Booking, Departing, Arriving, Payment, Prices
+from .models import Customer, Booking, Departing, Arriving, Payment, Prices, Vehicle
 import datetime
 
 
@@ -72,6 +72,18 @@ class BookingChangeFormAdmin(forms.ModelForm):
         fields = '__all__'
 
 
+class VehicleCreationFormAdmin(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ('id',)
+
+
+class VehicleChangeFormAdmin(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = '__all__'
+
+
 class DepartingCreationFormAdmin(forms.ModelForm):
 
     departing_flight_datetime = forms.DateTimeField(label="Departure Date", widget=forms.DateInput)
@@ -102,26 +114,6 @@ class ArrivingCreationFormAdmin(forms.ModelForm):
 class ArrivingChangeFormAdmin(forms.ModelForm):
     class Meta:
         model = Arriving
-        fields = '__all__'
-
-
-class PaymentCreationFormAdmin(forms.ModelForm):
-
-    date_paid = forms.DateTimeField(label="Date of Payment", widget=forms.DateInput)
-    card_type = forms.TextInput()
-    card_number = forms.TextInput()
-    amount = forms.IntegerField()
-    expiry_date = forms.DateTimeField(label="Card Expiry Date", widget=forms.DateInput)
-    security_number = forms.TextInput()
-
-    class Meta:
-        model = Customer
-        fields = ('email',)
-
-
-class PaymentChangeFormAdmin(forms.ModelForm):
-    class Meta:
-        model = Payment
         fields = '__all__'
 
 
@@ -164,6 +156,16 @@ class BookingCreationFormCustomer(forms.ModelForm):
     class Meta:
         model = Booking
         fields = ('Start', 'End')
+
+
+class VehicleCreationFormCustomer(forms.ModelForm):
+    reg_no = forms.TextInput()
+    make = forms.TextInput()
+    manufacturer = forms.TextInput()
+
+    class Meta:
+        model = Vehicle
+        fields = ('reg_no', 'make', 'manufacturer')
 
 
 class BaseForm(forms.Form):
