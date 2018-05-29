@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}"/>
+{% block content %}
+    <form>
+
+    </form>
+  <h2>Generate Reports</h2>
+{% csrf_token %}
+  <p>
+    <table>
+        <tr>
+            <th><h3>Booking Report</h3></th>
+            <th><h3>Occupancy Report</h3></th>
+            <th><h3>Previous Weeks Booking Report</h3></th>
+        </tr>
+        <tr>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="booking_report" value="&nbsp;Booking Report">
+                </form>
+            </td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="occupancy_report" value="&nbsp;Occupancy Report">
+                </form>
+            </td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="submit" name="weeks_bookings" value="&nbsp;Weeks Bookings">
+                </form>
+            </td>
+        </tr>
+    <table/>
+  <p/>
+{% endblock %}

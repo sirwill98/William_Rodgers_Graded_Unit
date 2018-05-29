@@ -168,11 +168,6 @@ class VehicleCreationFormCustomer(forms.ModelForm):
         fields = ('reg_no', 'make', 'manufacturer')
 
 
-class BaseForm(forms.Form):
-    Start = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
-    End = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
-
-
 class BookingViewForm(forms.ModelForm):
     booking_end = forms.DateField(widget=forms.SelectDateWidget)
 

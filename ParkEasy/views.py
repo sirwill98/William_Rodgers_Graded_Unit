@@ -200,7 +200,6 @@ def edit_booking(request, id):
 def view_bookings(request):
     query_results = Booking.objects.filter(customer=request.user)
     context = {"query_results": query_results}
-    generate_weekly_report(request)
     return render(request, 'view-bookings.html', context)
 
 
@@ -221,28 +220,125 @@ def delete_account(request):
     return render(request, 'home.html')
 
 
-def generate_weekly_report(request):
-    #make conditional and use session variables for dates
-    #options for WEEK, TIME PERIOD, OCCUPANCY REPORT
-    #calculate when the last week started and ended
-    today = datetime.today()
-    weekday = today.weekday()
-    start_delta = timedelta(days=weekday, weeks=1)
-    start_of_week = today - start_delta
-    end_of_week = start_of_week + timedelta(days=6)
-    booking_set = Booking.objects.filter(date_created__gte=start_of_week, date_created__lte=end_of_week)
-    #define the excel document
-    wb = xlwt.Workbook()
-    ws = wb.add_sheet('Bookings for week ' + str(start_of_week.date()))
-    for i, booking in enumerate(booking_set):
-        ws.write(i, 0, str(booking.id))
-        ws.write(i, 1, str(booking.customer))
-        ws.write(i, 2, str(booking.vehicle))
-        ws.write(i, 3, str(booking.booking_date))
-        ws.write(i, 4, str(booking.booking_length))
-        ws.write(i, 5, str(booking.date_created))
-        ws.write(i, 6, str(booking.calc_amount(booking.booking_length)))
-    wb.save('C:/Users/Billy/Documents/django_reports/' + 'Bookings for week ' + str(start_of_week.date()) + '.xls')
-    query_results = Booking.objects.filter(customer=request.user)
-    context = {"query_results": query_results}
-    return render(request, 'view-bookings.html', context)
+def report_init(request):
+    if request.method == 'POST':
+        if request.POST.get("booking_report"):
+            return redirect("add-dates")
+        elif request.POST.get("occupancy_report"):
+            request.session['occupancy'] = "foo"
+            return redirect("add-dates")
+        elif request.POST.get("weeks_bookings"):
+            request.session['start'] = datetime.today()
+            generate_reports(request)
+            return redirect("home")
+    else:
+        if request.GET.get('booking_report', 'Booking+Report'):
+            print("booking_report")
+        elif request.GET.get('occupancy_report', 'Occupancy+Report'):
+            print("occupancy_report")
+        elif request.GET.get('weeks_bookings', 'Weeks+Bookings'):
+            print("weeks_bookings")
+        else:
+            return render(request, 'Staff/Reports.html')
+    return render(request, 'Staff/Reports.html')
+
+
+def add_dates(request):
+    if request.POST:
+        form = BookingCreationFormCustomer(request.POST)
+        if form.is_valid():
+            start = form.cleaned_data.get('Start')
+            end = form.cleaned_data.get('End')
+            request.session['start'] = start
+            request.session['end'] = end
+            generate_reports(request)
+            return redirect("home")
+    else:
+        form = BookingCreationFormCustomer()
+    return render(request, 'Staff/Report_Dates.html', {'form': form})
+
+
+def generate_reports(request):
+    if 'start' in request.session:
+        if 'end' in request.session:
+            start = request.session['start']
+            end = request.session['end']
+            booking_set = Booking.objects.filter(date_created__gte=start, date_created__lte=end)
+            wb = xlwt.Workbook()
+            ws = wb.add_sheet('bookings ' + str(start) + 'to' + str(end))
+            i = 1
+            ws.write(0, 0, 'booking')
+            ws.write(0, 1, 'customer')
+            ws.write(0, 2, 'vehicle')
+            ws.write(0, 3, 'date')
+            ws.write(0, 4, 'length')
+            ws.write(0, 5, 'date created')
+            ws.write(0, 6, 'total')
+            for i, booking in enumerate(booking_set):
+                ws.write(i+1, 0, str(booking.id))
+                ws.write(i+1, 1, str(booking.customer))
+                ws.write(i+1, 2, str(booking.vehicle))
+                ws.write(i+1, 3, str(booking.booking_date))
+                ws.write(i+1, 4, str(booking.booking_length))
+                ws.write(i+1, 5, str(booking.date_created))
+                ws.write(i+1, 6, str(booking.calc_amount(booking.booking_length)))
+            wb.save('C:/Users/Billy/Documents/django_reports/' + 'Bookings from ' + str(start) + 'to'
+                    + str(end) + '.xls')
+            del request.session['start']
+            del request.session['end']
+            return
+        elif 'end' in request.session and 'occupancy' in request.session:
+            start = request.session['start']
+            end = request.session['end']
+            booking_set = Booking.objects.filter(date_created__gte=start, date_created__lte=end)
+            wb = xlwt.Workbook()
+            ws = wb.add_sheet('occupancy from ' + str(start) + 'to' + str(end))
+            ws.write(0, 0, 'booking id')
+            ws.write(0, 1, 'customer')
+            ws.write(0, 2, 'date')
+            ws.write(0, 3, 'length')
+            ws.write(0, 4, 'date created')
+            test = 0
+            for i, booking in enumerate(booking_set):
+                ws.write(i+1, 0, str(booking.id))
+                ws.write(i+1, 1, str(booking.customer))
+                ws.write(i+1, 3, str(booking.booking_date))
+                ws.write(i+1, 4, str(booking.booking_length))
+                ws.write(i+1, 5, str(booking.date_created))
+                test = i
+            ws.write(test+2, 0, str(booking_set.count()))
+            wb.save('C:/Users/Billy/Documents/django_reports/' + 'occupancy ' + str(start) + 'to'
+                    + str(end) + '.xls')
+            del request.session['start']
+            del request.session['end']
+            del request.session['occupancy']
+            return
+        else:
+            today = datetime.today()
+            weekday = today.weekday()
+            start_delta = timedelta(days=weekday, weeks=1)
+            start_of_week = request.session['start'] - start_delta
+            end_of_week = start_of_week + timedelta(days=6)
+            booking_set = Booking.objects.filter(date_created__gte=start_of_week.date(), date_created__lte=end_of_week.date())
+            #define the excel document
+            wb = xlwt.Workbook()
+            ws = wb.add_sheet('Bookings for week ' + str(start_of_week.date()))
+            ws.write(0, 0, 'booking id')
+            ws.write(0, 1, 'customer')
+            ws.write(0, 2, 'vehicle')
+            ws.write(0, 3, 'date')
+            ws.write(0, 4, 'length')
+            ws.write(0, 5, 'date created')
+            ws.write(0, 6, 'total')
+            for i, booking in enumerate(booking_set):
+                ws.write(i+1, 0, str(booking.id))
+                ws.write(i+1, 1, str(booking.customer))
+                ws.write(i+1, 2, str(booking.vehicle))
+                ws.write(i+1, 3, str(booking.booking_date))
+                ws.write(i+1, 4, str(booking.booking_length))
+                ws.write(i+1, 5, str(booking.date_created))
+                ws.write(i+1, 6, str(booking.calc_amount(booking.booking_length)))
+            wb.save\
+                ('C:/Users/Billy/Documents/django_reports/' + 'Bookings for week ' + str(start_of_week.date()) + '.xls')
+            del request.session['start']
+            return

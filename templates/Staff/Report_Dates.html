@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Select Dates{% endblock %}
+{% block content %}
+    <h3>Select Dates</h3>
+    <form method = "POST">
+        {% csrf_token %}
+        {% for field in form %}
+            <p>
+                {{ field.label_tag }}<br>
+                {{ field }}
+            </p>
+        {% endfor %}
+        {% if error in request %}
+            <h3></h3>
+        {% endif %}
+        <input type="submit" formmethod="post" Value="Select Dates">
+    </form>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

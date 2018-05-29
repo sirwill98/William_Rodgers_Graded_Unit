@@ -82,6 +82,7 @@ class Booking(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
     booking_date = models.DateField(default=timezone.now)
     booking_length = models.IntegerField(default=0)
+    checked_in = models.BooleanField(default=False)
     date_created = models.DateField(default=timezone.now)
 
     def calc_amount(self, days):
