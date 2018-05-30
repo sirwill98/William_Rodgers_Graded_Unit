@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% extends 'base.html' %}
+<a href="{% url 'generate-reports' %}">Create Reports</a>
+{% block content %}
+    {% csrf_token %}
+    <a href="{% url 'generate-reports' %}">Create Reports</a>
+{% endblock %}

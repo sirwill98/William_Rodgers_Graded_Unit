@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Add an arriving flight{% endblock %}
+{% block content %}
+    <h3>Add an arriving flight</h3>
+    <form method = "POST">
+        {% csrf_token %}
+        {% for field in form %}
+            <p>
+                {{ field.label_tag }}<br>
+                {{ field }}
+            </p>
+        {% endfor %}
+        {% if error in request %}
+            <h3></h3>
+        {% endif %}
+        <input type="submit" formmethod="post" Value="Add an arriving flight!">
+    </form>
+{% endblock %}

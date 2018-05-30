@@ -1,10 +1,11 @@
 from django.views.generic import ListView
 import xlwt
-from .models import Customer, Booking, Prices, Vehicle
+from .models import Customer, Booking, Prices, Vehicle, Departing, Arriving, Payment
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer, \
-    BookingEditFormCustomer, VehicleCreationFormCustomer
+    BookingEditFormCustomer, VehicleCreationFormCustomer, ArrivingCreationFormCustomer, DepartingCreationFormCustomer, \
+    ReportCreationForm
 from William_Rodgers_Graded_Unit import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
@@ -16,13 +17,21 @@ from django.core.mail import send_mail
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
-def HomePageView(request):
-    if request.POST:
-        form = BookingCreationFormCustomer(request.POST)
-    else:
-        form = BookingCreationFormCustomer()
+def home_page_view(request):
+    return render(request, 'home.html')
 
-    return render(request, 'home.html', {'form': form})
+
+def delete_all():
+    Booking.objects.all().delete()
+    Arriving.objects.all().delete()
+    Departing.objects.all().delete()
+    Vehicle.objects.all().delete()
+    Payment.objects.all().delete()
+    return True
+
+
+def staff_home_page_view(request):
+    return render(request, 'Staff/Home.html')
 
 
 def change_password(request):
@@ -52,17 +61,19 @@ def vehicle_form(request):
         form = VehicleCreationFormCustomer(request.POST)
         if form.is_valid():
             if request.user.is_authenticated:
-                #get vehicle data from form
+                # get vehicle data from form
                 reg_no = form.cleaned_data.get('reg_no')
                 make = form.cleaned_data.get('make')
                 manufacturer = form.cleaned_data.get('manufacturer')
-                #get logged in customer
+                # get logged in customer
                 cust = Customer.objects.get(email=request.user.email)
-                #get current prices
+                # get current prices
                 vehicle = Vehicle(reg_no=reg_no, make=make, manufacturer=manufacturer)
                 price = Prices.objects.get(is_current=True)
                 newbooking1 = Booking(customer=cust, booking_date=request.session['booking_date'],
-                                      booking_length=request.session['booking_length'], prices=price, vehicle=vehicle)
+                                      booking_length=request.session['booking_length'], prices=price, vehicle=vehicle,
+                                      vip=request.session['vip'], valet=request.session['valet'],
+                                      departing=request.session['departing'], arriving=request.session['arriving'])
                 request.session['vehicle'] = vehicle
                 request.session['booking'] = newbooking1
                 amount = Booking.calc_amount(newbooking1, request.session['booking_length'])
@@ -78,6 +89,59 @@ def vehicle_form(request):
     return render(request, 'vehicle.html', {'form': form})
 
 
+def departing_form(request):
+    if request.POST:
+        form = DepartingCreationFormCustomer(request.POST)
+        if form.is_valid():
+            if request.user.is_authenticated:
+                # get vehicle data from form
+                departing_flight_number = form.cleaned_data.get('departing_flight_number')
+                departing_flight_datetime = form.cleaned_data.get('departing_flight_datetime')
+                destination = form.cleaned_data.get('destination')
+                # get logged in customer
+                cust = Customer.objects.get(email=request.user.email)
+                # create departing flight object
+                departing = Departing(departing_flight_number=departing_flight_number,  
+                                      departing_flight_datetime=departing_flight_datetime,
+                                      destination=destination, customer=cust)
+                request.session['departing'] = departing
+                return redirect("arriving")
+            else:
+                return render(request, 'registration/login.html', {'form': form})
+        else:
+            return render(request, 'departing.html', {'form': form})
+    else:
+        form = DepartingCreationFormCustomer()
+    return render(request, 'departing.html', {'form': form})
+
+
+def arriving_form(request):
+    if request.POST:
+        form = ArrivingCreationFormCustomer(request.POST)
+        if form.is_valid():
+            if request.user.is_authenticated:
+                # get vehicle data from form
+                arriving_flight_number = form.cleaned_data.get('arriving_flight_number')
+                arriving_flight_datetime = form.cleaned_data.get('arriving_flight_datetime')
+                # get logged in customer
+                cust = Customer.objects.get(email=request.user.email)
+                # create arriving flight object
+                arriving = Arriving(arriving_flight_number=arriving_flight_number,
+                                    arriving_flight_datetime=arriving_flight_datetime, customer=cust)
+                request.session['arriving'] = arriving
+         #       print(arriving.id)
+          #      test = arriving.save()
+           #     print(arriving.id)
+                return redirect("vehicle")
+            else:
+                return render(request, 'registration/login.html', {'form': form})
+        else:
+            return render(request, 'arriving.html', {'form': form})
+    else:
+        form = ArrivingCreationFormCustomer()
+    return render(request, 'arriving.html', {'form': form})
+
+
 def booking_form(request):
     if request.POST:
         form = BookingCreationFormCustomer(request.POST)
@@ -85,6 +149,8 @@ def booking_form(request):
             if request.user.is_authenticated:
                 start = form.cleaned_data.get('Start')
                 end = form.cleaned_data.get('End')
+                vip = form.cleaned_data.get('Vip')
+                valet = form.cleaned_data.get('Valet')
                 length = end - start
                 length = length.days
                 if length <= 0:
@@ -92,13 +158,15 @@ def booking_form(request):
                     return render(request, 'booking.html', {'form': form})
                 request.session['booking_date'] = start
                 request.session['booking_length'] = length
+                request.session['vip'] = vip
+                request.session['valet'] = valet
                 days = length
                 request.session['days'] = days
                 if Booking.objects.count() == 2000:
                     messages.add_message(request, messages.INFO, 'There are no spaces currently available')
                     return render(request, 'booking.html', {'form': form})
                 form = VehicleCreationFormCustomer()
-                return redirect("vehicle")
+                return redirect("departing")
             else:
                 return render(request, 'registration/login.html', {'form': form})
         else:
@@ -108,10 +176,14 @@ def booking_form(request):
 
     return render(request, 'booking.html', {'form': form})
 
+# clear session variables???
+
 
 def checkout(request):
     new_booking = request.session['booking']
     vehicle = request.session['vehicle']
+    arriving = request.session['arriving']
+    departing = request.session['departing']
 
     if request.method == "POST":
         token = request.POST.get("stripeToken")
@@ -130,10 +202,21 @@ def checkout(request):
         return False, ce
 
     else:
+        departing.save()
+        arriving.save()
         vehicle.save()
         new_booking.vehicle = vehicle
+        new_booking.arriving = arriving
+        new_booking.departing = departing
         new_booking.date_booked = timezone.now()
         new_booking.save()
+        payment = Payment(
+            booking=new_booking,
+            date_paid=timezone.now(),
+            paid=True,
+            amount=request.session['num_amount']
+        )
+        payment.save()
 
         send_mail(
             'ParkEasy Parking Booking',
@@ -230,22 +313,15 @@ def report_init(request):
         elif request.POST.get("weeks_bookings"):
             request.session['start'] = datetime.today()
             generate_reports(request)
-            return redirect("home")
+            return redirect("Home")
     else:
-        if request.GET.get('booking_report', 'Booking+Report'):
-            print("booking_report")
-        elif request.GET.get('occupancy_report', 'Occupancy+Report'):
-            print("occupancy_report")
-        elif request.GET.get('weeks_bookings', 'Weeks+Bookings'):
-            print("weeks_bookings")
-        else:
-            return render(request, 'Staff/Reports.html')
+        return render(request, 'Staff/Reports.html')
     return render(request, 'Staff/Reports.html')
 
 
 def add_dates(request):
     if request.POST:
-        form = BookingCreationFormCustomer(request.POST)
+        form = ReportCreationForm(request.POST)
         if form.is_valid():
             start = form.cleaned_data.get('Start')
             end = form.cleaned_data.get('End')
@@ -254,7 +330,7 @@ def add_dates(request):
             generate_reports(request)
             return redirect("home")
     else:
-        form = BookingCreationFormCustomer()
+        form = ReportCreationForm()
     return render(request, 'Staff/Report_Dates.html', {'form': form})
 
 

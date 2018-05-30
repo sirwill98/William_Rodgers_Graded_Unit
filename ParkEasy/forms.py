@@ -152,10 +152,12 @@ class CustomerChangeFormCustomer(UserChangeForm):
 class BookingCreationFormCustomer(forms.ModelForm):
     Start = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
     End = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+    Vip = forms.BooleanField(initial=False, required=False)
+    Valet = forms.BooleanField(initial=False, required=False)
 
     class Meta:
         model = Booking
-        fields = ('Start', 'End')
+        fields = ('Start', 'End', 'Vip', 'Valet')
 
 
 class VehicleCreationFormCustomer(forms.ModelForm):
@@ -180,7 +182,7 @@ class BookingEditFormCustomer(forms.ModelForm):
 
     class Meta:
         model = Booking
-        fields = ('booking_date', 'booking_length')
+        fields = ('booking_date', 'booking_length', 'vip', 'valet')
 
     def __init__(self, booking_date, booking_length, *args, **kwargs):
         super(BookingEditFormCustomer, self).__init__(*args, **kwargs)
@@ -195,3 +197,31 @@ class BookingEditFormCustomer(forms.ModelForm):
         if bk_date < datetime.date.today():
             raise forms.ValidationError("The date cannot be in the past!")
         return bk_date
+
+
+class DepartingCreationFormCustomer(forms.ModelForm):
+    departing_flight_number = forms.TextInput()
+    departing_flight_datetime = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+    destination = forms.TextInput()
+
+    class Meta:
+        model = Departing
+        fields = ('departing_flight_number', 'departing_flight_datetime', 'destination')
+
+
+class ArrivingCreationFormCustomer(forms.ModelForm):
+    arriving_flight_number = forms.TextInput()
+    arriving_flight_datetime = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+
+    class Meta:
+        model = Arriving
+        fields = ('arriving_flight_number', 'arriving_flight_datetime')
+
+
+class ReportCreationForm(forms.ModelForm):
+    Start = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+    End = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+
+    class Meta:
+        model = Booking
+        fields = ('Start', 'End')

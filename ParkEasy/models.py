@@ -38,9 +38,9 @@ class UserManager(BaseUserManager):
 
 
 class Vehicle(models.Model):
-    reg_no = models.TextField(max_length=7)
-    make = models.TextField()
-    manufacturer = models.TextField()
+    reg_no = models.CharField(max_length=7)
+    make = models.CharField(max_length=64)
+    manufacturer = models.CharField(max_length=64)
 
     def __str__(self):
         return 'Vehicle: ' + self.manufacturer + ' ' + self.make
@@ -56,7 +56,7 @@ class Prices(models.Model):
 
 
 class Customer(AbstractUser):
-    password = models.TextField(max_length=100, default="")
+    password = models.CharField(max_length=100, default="")
     email = models.EmailField(max_length=100, default="", unique=True)
     is_staff = models.BooleanField(
         default=False,
@@ -76,10 +76,139 @@ class Customer(AbstractUser):
         return self.email
 
 
+class Departing(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    departing_flight_number = models.CharField(max_length=16)
+    departing_flight_datetime = models.DateTimeField()
+    destination_choices = (
+        ("AMSTERDAM", "amsterdam"),
+        ("ANTALYA-TURKEY", "antalya-turkey"),
+        ("BARCELONA", "barcelona"),
+        ("BARRA", "barra"),
+        ("BELFAST", "belfast"),
+        ("BENBECULA", "benbecula"),
+        ("BERGEN", "bergen"),
+        ("BERLIN", "berlin"),
+        ("BIRMINGHAM", "birmingham"),
+        ("BODRUM-TURKEY", "bodrum-turkey"),
+        ("BORDEAUX", "bordeaux"),
+        ("BOURGAS-BULGARIA", "bourgas-bulgaria"),
+        ("BRIDGETOWN-BARBADOS", "bridgetown-barbados"),
+        ("BRISTOL", "bristol"),
+        ("BRUSSELS", "brussels"),
+        ("BUCHAREST", "bucharest"),
+        ("BUDAPEST", "budapest"),
+        ("BYDGOSZCZ", "bydgoszcz"),
+        ("CAMPBELTOWN", "campbeltown"),
+        ("CANCUN", "cancun"),
+        ("CAPE-VERDE-SAL", "cape-verde-sal"),
+        ("CARCASSONNE", "carcassonne"),
+        ("CARDIFF", "cardiff"),
+        ("CAYO-COCO", "cayo-coco"),
+        ("CHAMBERY", "chambery"),
+        ("CHANIA-CRETE", "chania-crete"),
+        ("CORFU", "corfu"),
+        ("CORK", "cork"),
+        ("COSTA-BLANCA-ALICANTE", "costa-blanca-alicante"),
+        ("COSTA-BRAVA-GIRONA", "costa-brava-girona"),
+        ("COSTA-DEL-SOL-MALAGA", "costa-del-sol-malaga"),
+        ("COSTA-DORADA-REUS", "costa-dorada-reus"),
+        ("DALAMAN-TURKEY", "dalaman-turkey"),
+        ("DERRY", "derry"),
+        ("DONEGAL", "donegal"),
+        ("DUBAI", "dubai"),
+        ("DUBLIN", "dublin"),
+        ("DUBROVNIK", "dubrovnik"),
+        ("DUESSELDORF", "duesseldorf"),
+        ("EAST-MIDLANDS", "east-midlands"),
+        ("EXETER", "exeter"),
+        ("FARO-ALGARVE", "faro-algarve"),
+        ("FRANKFURT", "frankfurt"),
+        ("FUERTEVENTURA", "fuerteventura"),
+        ("GDANSK", "gdansk"),
+        ("GENEVA", "geneva"),
+        ("GRAN-CANARIA", "gran-canaria"),
+        ("GRENOBLE", "grenoble"),
+        ("HALIFAX", "halifax"),
+        ("HALKIDIKI", "halkidiki"),
+        ("HERAKLION-CRETE", "heraklion-crete"),
+        ("HURGHADA", "hurghada"),
+        ("IBIZA", "ibiza"),
+        ("ISLAY", "islay"),
+        ("ISLE-OF-MAN", "isle-of-man"),
+        ("IZMIR", "izmir"),
+        ("JERSEY", "jersey"),
+        ("KATOWICE", "katowice"),
+        ("KEFALONIA", "kefalonia"),
+        ("KIRKWALL", "kirkwall"),
+        ("KITTILAE", "kittilae"),
+        ("KOS", "kos"),
+        ("KRAK&#243;W", "krak&#243;w"),
+        ("LANZAROTE", "lanzarote"),
+        ("LARNACA-CYPRUS", "larnaca-cyprus"),
+        ("LAS-VEGAS", "las-vegas"),
+        ("LISBON", "lisbon"),
+        ("LONDON", "london"),
+        ("MADEIRA", "madeira"),
+        ("MADRID", "madrid"),
+        ("MALTA", "malta"),
+        ("MANCHESTER", "manchester"),
+        ("MARSEILLE", "marseille"),
+        ("MENORCA", "menorca"),
+        ("MILAN", "milan"),
+        ("MONTEGO-BAY-JAMAICA", "montego-bay-jamaica"),
+        ("MUNICH", "munich"),
+        ("NAPLES", "naples"),
+        ("NEW-YORK", "new-york"),
+        ("NEWQUAY", "newquay"),
+        ("NORWICH", "norwich"),
+        ("ORLANDO", "orlando"),
+        ("PALANGA", "palanga"),
+        ("PALMA-DE-MALLORCA", "palma-de-mallorca"),
+        ("PAPHOS-CYPRUS", "paphos-cyprus"),
+        ("PARIS", "paris"),
+        ("PHILADELPHIA", "philadelphia"),
+        ("PRAGUE", "prague"),
+        ("REYKJAVIK", "reykjavik"),
+        ("RHODES", "rhodes"),
+        ("RIGA", "riga"),
+        ("ROME", "rome"),
+        ("ROVANIEMI", "rovaniemi"),
+        ("SALZBURG", "salzburg"),
+        ("SOFIA", "sofia"),
+        ("SOUTHAMPTON", "southampton"),
+        ("SPLIT", "split"),
+        ("STORNOWAY", "stornoway"),
+        ("SUMBURGH", "sumburgh"),
+        ("TENERIFE", "tenerife"),
+        ("TIREE", "tiree"),
+        ("TORONTO", "toronto"),
+        ("TUNISIA-ENFIDHA", "tunisia-enfidha"),
+        ("TURIN", "turin"),
+        ("VALENCIA", "valencia"),
+        ("VANCOUVER", "vancouver"),
+        ("VERONA", "verona"),
+        ("WARSAW", "warsaw"),
+        ("WROCLAW", "wroclaw"),
+        ("ZANTE ", "zante ")
+    )
+    destination = models.CharField(max_length=64, choices=destination_choices)
+
+
+class Arriving(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    arriving_flight_number = models.CharField(max_length=16)
+    arriving_flight_datetime = models.DateTimeField()
+
+
 class Booking(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     prices = models.ForeignKey(Prices, on_delete=models.CASCADE, default=1)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
+    departing = models.ForeignKey(Departing, on_delete=models.CASCADE)
+    arriving = models.ForeignKey(Arriving, on_delete=models.CASCADE)
+    vip = models.BooleanField(default=False)
+    valet = models.BooleanField(default=False)
     booking_date = models.DateField(default=timezone.now)
     booking_length = models.IntegerField(default=0)
     checked_in = models.BooleanField(default=False)
@@ -92,37 +221,25 @@ class Booking(models.Model):
         if days == 2:
             amount = amount * prices.day
         elif days == 3:
-            amount = amount * prices.day**2
+            amount = amount * prices.day ** 2
         elif days == 4:
-            amount = amount * prices.day**3
+            amount = amount * prices.day ** 3
         elif days == 5:
-            amount = amount * prices.day**4
+            amount = amount * prices.day ** 4
         elif days > 5:
-            amount = amount * prices.day**5
+            amount = amount * prices.day ** 5
             days = days - 5
             while days > 0:
                 amount = amount + prices.after_five
                 days = days - 1
+
+        if self.vip and self.valet:
+            amount = amount + prices.vip + prices.valet
+        elif self.vip:
+            amount = amount + prices.vip
+        elif self.valet:
+            amount = amount + prices.valet
         return int(amount)
-
-    def save(self, *args, **kwargs):
-        if Booking.objects.count() >= 2000:
-            return False
-        else:
-            super(Booking, self).save(*args, **kwargs)
-
-
-class Departing(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    departing_flight_number = models.TextField(max_length=16)
-    departing_flight_datetime = models.DateTimeField()
-    destination = models.TextField(max_length=64)
-
-
-class Arriving(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    arriving_flight_number = models.TextField(max_length=16)
-    arriving_flight_datetime = models.DateTimeField()
 
 
 class Payment(models.Model):
