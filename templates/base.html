@@ -22,8 +22,10 @@
     {% if user.is_superuser %}
         <a href="{% url 'admin:index' %}">Admin</a>
     {% endif %}
-    <div class="dropdown" style="float:left;">
-        <button class="dropbtn">{{ request.user.email }}</button>
+    <div class="dropdown" style="float:right;">
+        <button class="dropbtn">{{ request.user.email }}
+        <i class="fa fa-caret-down"></i>
+        </button>
         <div class="dropdown-content">
             {% if user.is_authenticated %}
                 <p><a href="{% url 'edit' %}">edit user</a></p>

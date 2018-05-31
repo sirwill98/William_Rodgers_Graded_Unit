@@ -37,17 +37,17 @@ class BookingAdmin(ModelAdmin):
     add_form = BookingCreationFormAdmin
     form = BookingChangeFormAdmin
     model = Booking
-    list_display = ['id', 'customer', 'prices', 'vehicle', 'booking_date', 'booking_length', 'checked_in', 'departing',
-                    'arriving', 'vip', 'valet']
+    list_display = ['id', 'customer', 'prices', 'vehicle', 'booking_date', 'booking_length', 'checked_in', 'checked_out'
+                    , 'departing', 'arriving', 'vip', 'valet']
     fieldsets = (
-        (None, {'fields': ('booking_date', 'customer', 'prices', 'vehicle', 'booking_length', 'checked_in', 'departing',
-                           'arriving', 'vip', 'valet',)}),
+        (None, {'fields': ('booking_date', 'customer', 'prices', 'vehicle', 'booking_length', 'checked_in',
+                           'checked_out', 'departing', 'arriving', 'vip', 'valet',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('customer', 'prices', 'vehicle', 'booking_date', 'booking_length', 'checked_in', 'departing',
-                       'arriving', 'vip', 'valet')}
+            'fields': ('customer', 'prices', 'vehicle', 'booking_date', 'booking_length', 'checked_in', 'checked_out',
+                       'departing', 'arriving', 'vip', 'valet')}
          ),
     )
 

@@ -3,7 +3,7 @@ from . import views
 from django.urls import path
 from .views import booking_form, signup, payment_form, checkout, view_bookings, delete_booking, edit_booking, \
     change_password, delete_account, vehicle_form, report_init, add_dates, staff_home_page_view, departing_form, \
-    arriving_form
+    arriving_form, check_in, check_in_page, check_out, day_input
 
 urlpatterns = [
     path('', views.home_page_view, name='home'),
@@ -22,5 +22,10 @@ urlpatterns = [
     path('delete-account/', delete_account, name="delete-account"),
     path('Staff/Reports/', report_init, name='generate-reports'),
     path('Staff/Report_Dates', add_dates, name='add-dates'),
-    path('Staff/Home', staff_home_page_view, name='staff-home')
+    path('Staff/Home', staff_home_page_view, name='staff-home'),
+    path('Staff/Booking_Status/', check_in_page, name="booking-status"),
+    path('Staff/Check_in/<id>/', check_in, name="check-in"),
+    path('Staff/Check_out/<id>/', check_out, name="check-out"),
+    path('Staff/DayInput', day_input, name="day-input")
+   # path('Staff/Departures', , name="departures")
 ]

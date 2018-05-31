@@ -225,3 +225,11 @@ class ReportCreationForm(forms.ModelForm):
     class Meta:
         model = Booking
         fields = ('Start', 'End')
+
+
+class DateTriggerStaff(forms.ModelForm):
+    Day = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+
+    class Meta:
+        model = Booking
+        fields = 'Day',

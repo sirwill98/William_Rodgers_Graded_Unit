@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
+from datetime import timedelta
 
 
 class UserManager(BaseUserManager):
@@ -143,7 +144,7 @@ class Departing(models.Model):
         ("KIRKWALL", "kirkwall"),
         ("KITTILAE", "kittilae"),
         ("KOS", "kos"),
-        ("KRAK&#243;W", "krak&#243;w"),
+        ("KRAKOW", "krakow"),
         ("LANZAROTE", "lanzarote"),
         ("LARNACA-CYPRUS", "larnaca-cyprus"),
         ("LAS-VEGAS", "las-vegas"),
@@ -190,7 +191,7 @@ class Departing(models.Model):
         ("VERONA", "verona"),
         ("WARSAW", "warsaw"),
         ("WROCLAW", "wroclaw"),
-        ("ZANTE ", "zante ")
+        ("ZANTE", "zante ")
     )
     destination = models.CharField(max_length=64, choices=destination_choices)
 
@@ -212,12 +213,17 @@ class Booking(models.Model):
     booking_date = models.DateField(default=timezone.now)
     booking_length = models.IntegerField(default=0)
     checked_in = models.BooleanField(default=False)
+    checked_out = models.BooleanField(default=False)
     date_created = models.DateField(default=timezone.now)
+
+    #def save(self, *args, **kwargs):
+     #   if Booking.objects.filter(checked_in=True, checked_out=False).count() >= 100:
+      #      return false
+       # super(Booking, self).save(*args, **kwargs)
 
     def calc_amount(self, days):
         prices = Prices.objects.get(id=self.prices.id)
         amount = prices.base
-        print("test")
         if days == 2:
             amount = amount * prices.day
         elif days == 3:
@@ -240,6 +246,21 @@ class Booking(models.Model):
         elif self.valet:
             amount = amount + prices.valet
         return int(amount)
+
+    def calc_delay(self):
+        if self.checked_in and not self.checked_out:
+            start_delta = timedelta(days=self.booking_length)
+            if timezone.now() > self.booking_date + start_delta:
+                print("delayed")
+            else:
+                print("nothing")
+        if not self.checked_in and not self.checked_out:
+            if timezone.now() > self.booking_date:
+                print("delayed")
+            else:
+                print("nothing")
+        else:
+            print("else")
 
 
 class Payment(models.Model):

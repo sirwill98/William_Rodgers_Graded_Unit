@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from .forms import BookingCreationFormCustomer, CustomerCreationFormUser, CustomerChangeFormCustomer, \
     BookingEditFormCustomer, VehicleCreationFormCustomer, ArrivingCreationFormCustomer, DepartingCreationFormCustomer, \
-    ReportCreationForm
+    ReportCreationForm, DateTriggerStaff
 from William_Rodgers_Graded_Unit import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
@@ -129,9 +129,6 @@ def arriving_form(request):
                 arriving = Arriving(arriving_flight_number=arriving_flight_number,
                                     arriving_flight_datetime=arriving_flight_datetime, customer=cust)
                 request.session['arriving'] = arriving
-         #       print(arriving.id)
-          #      test = arriving.save()
-           #     print(arriving.id)
                 return redirect("vehicle")
             else:
                 return render(request, 'registration/login.html', {'form': form})
@@ -286,6 +283,32 @@ def view_bookings(request):
     return render(request, 'view-bookings.html', context)
 
 
+def check_in_page(request):
+    query_results = Booking.objects.all
+    context = {"query_results": query_results}
+    return render(request, 'Staff/Check_In.html', context)
+
+
+def check_in(request, id):
+    booking = Booking.objects.get(id=id)
+    booking.checked_in = True
+    booking.save()
+    messages.add_message(request, messages.INFO, 'Booking successfully checked in')
+    query_results = Booking.objects.all
+    context = {"query_results": query_results}
+    return render(request, 'Staff/Check_In.html', context)
+
+
+def check_out(request, id):
+    booking = Booking.objects.get(id=id)
+    booking.checked_out = True
+    booking.save()
+    messages.add_message(request, messages.INFO, 'Booking successfully checked out')
+    query_results = Booking.objects.all
+    context = {"query_results": query_results}
+    return render(request, 'Staff/Check_In.html', context)
+
+
 def delete_booking(request, id):
     booking = Booking.objects.get(id=id)
     booking.delete()
@@ -418,3 +441,23 @@ def generate_reports(request):
                 ('C:/Users/Billy/Documents/django_reports/' + 'Bookings for week ' + str(start_of_week.date()) + '.xls')
             del request.session['start']
             return
+
+
+def day_input(request):
+    if request.method == 'POST':
+        form = DateTriggerStaff(request.POST)
+        if form.is_valid():
+            if '_Departures' in request.POST:
+                date = form.cleaned_data.get('Day')
+                query_results = Booking.objects.filter(booking_date=date, checked_in=False).order_by('booking_date')
+                context = {"query_results": query_results}
+                return render(request, 'Staff/Departures.html', context)
+            elif '_Landings' in request.POST:
+                date = form.cleaned_data.get('Day')
+                query_results = Booking.objects.filter(arriving__arriving_flight_datetime=date, checked_out=False).\
+                    order_by('booking_date')
+                context = {"query_results": query_results}
+                return render(request, 'Staff/Landings.html', context)
+    else:
+        form = DateTriggerStaff()
+    return render(request, 'Staff/Day_Input.html', {'form': form})

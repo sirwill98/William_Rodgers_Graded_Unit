@@ -1,6 +1,17 @@
 {% extends 'base.html' %}
-<a href="{% url 'generate-reports' %}">Create Reports</a>
 {% block content %}
     {% csrf_token %}
-    <a href="{% url 'generate-reports' %}">Create Reports</a>
+    <form action="{% url 'generate-reports' %}">
+        {% csrf_token %}
+        <input type="submit" value="Create Reports" />
+    </form>
+    </br>
+    <form action="{% url 'booking-status' %}">
+        {% csrf_token %}
+        <input type="submit" value="Check in/out" />
+    </form>
+    <form action="{% url 'day-input' %}">
+        {% csrf_token %}
+        <input type="submit" value="Check Departures and Arrivals" />
+    </form>
 {% endblock %}
