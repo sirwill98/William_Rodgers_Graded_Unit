@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
+from django.core.validators import RegexValidator
 from datetime import timedelta
 
 
@@ -39,10 +40,14 @@ class UserManager(BaseUserManager):
 
 
 class Vehicle(models.Model):
-    reg_no = models.CharField(max_length=7)
+    reg_no_regex = RegexValidator(regex=r'^[A-Z]{2}[0-9]{2} [A-Z]{3}$',
+                                  message="Registration must be entered in the format: 'AB12 CDE'.",
+                                  code='invalid_registration')
+    reg_no = models.CharField(max_length=8, validators=[reg_no_regex])
     make = models.CharField(max_length=64)
     manufacturer = models.CharField(max_length=64)
 
+    # used to name the objects
     def __str__(self):
         return 'Vehicle: ' + self.manufacturer + ' ' + self.make
 
@@ -65,13 +70,22 @@ class Customer(AbstractUser):
     )
     address_line1 = models.CharField(max_length=100)
     address_line2 = models.CharField(max_length=100)
-    postcode = models.CharField(max_length=16)
-    tel_no = models.CharField(max_length=20)
+    postcode_regex = RegexValidator(regex=r'([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|'
+                                          r'(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z]'
+                                          r'[A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\s?[0-9][A-Za-z]{2})',
+                                    message="postcode must be a valid uk postcode")
+    postcode = models.CharField(max_length=16, validators=[postcode_regex])
+    tel_no_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
+                                  message="Phone number must be entered in the format: '+999999999'. Up to 15 digits "
+                                          "allowed.")
+    tel_no = models.CharField(validators=[tel_no_regex], max_length=17)
     username = None
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    # because the username is not used it is overridden by email
 
     def get_username(self):
         return self.email
@@ -81,6 +95,7 @@ class Departing(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     departing_flight_number = models.CharField(max_length=16)
     departing_flight_datetime = models.DateTimeField()
+    # list of every location glasgow airport flies to
     destination_choices = (
         ("AMSTERDAM", "amsterdam"),
         ("ANTALYA-TURKEY", "antalya-turkey"),
@@ -247,24 +262,12 @@ class Booking(models.Model):
             amount = amount + prices.valet
         return int(amount)
 
-    def calc_delay(self):
-        if self.checked_in and not self.checked_out:
-            start_delta = timedelta(days=self.booking_length)
-            if timezone.now() > self.booking_date + start_delta:
-                print("delayed")
-            else:
-                print("nothing")
-        if not self.checked_in and not self.checked_out:
-            if timezone.now() > self.booking_date:
-                print("delayed")
-            else:
-                print("nothing")
-        else:
-            print("else")
-
-
 class Payment(models.Model):
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
     date_paid = models.DateTimeField(default=timezone.now)
     paid = models.BooleanField(default=False)
     amount = models.IntegerField()
+
+
+# class Space(models.Model):
+

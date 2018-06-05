@@ -7,6 +7,7 @@ import datetime
 class CustomerCreationFormUser(UserCreationForm):
     error_messages = {
         'password_mismatch': "The two password fields didn't match.",
+        'telephont_invalid': "The Phone Number was invalid"
     }
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Password confirmation", widget=forms.PasswordInput,
