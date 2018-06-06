@@ -38,16 +38,16 @@ class BookingAdmin(ModelAdmin):
     form = BookingChangeFormAdmin
     model = Booking
     list_display = ['id', 'customer', 'prices', 'vehicle', 'booking_date', 'booking_length', 'checked_in', 'checked_out'
-                    , 'departing', 'arriving', 'vip', 'valet']
+                    , 'departing', 'arriving', 'vip', 'valet', 'assigned_space']
     fieldsets = (
         (None, {'fields': ('booking_date', 'customer', 'prices', 'vehicle', 'booking_length', 'checked_in',
-                           'checked_out', 'departing', 'arriving', 'vip', 'valet',)}),
+                           'checked_out', 'departing', 'arriving', 'vip', 'valet',  'assigned_space',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': ('customer', 'prices', 'vehicle', 'booking_date', 'booking_length', 'checked_in', 'checked_out',
-                       'departing', 'arriving', 'vip', 'valet')}
+                       'departing', 'arriving', 'vip', 'valet',  'assigned_space')}
          ),
     )
 

@@ -25,7 +25,7 @@ def home_page_view(request):
     return render(request, 'home.html')
 
 
-# this is a funtion that is only ran to clear the database for any changes to the models that requires new objects or
+# this is a function that is only run to clear the database for any changes to the models that requires new objects or
 # attributes
 def delete_all():
     # these lines delete all entries of the objects in the database
@@ -77,7 +77,7 @@ def change_password(request):
 class BookingView(ListView):
     #sets the model of the view to the booking model
     model = Booking
-    #setd the template to the booking html page
+    #set the template to the booking html page
     template_name = 'booking.html'
 
 
@@ -106,6 +106,7 @@ def vehicle_form(request):
                                       booking_length=request.session['booking_length'], prices=price, vehicle=vehicle,
                                       vip=request.session['vip'], valet=request.session['valet'],
                                       departing=request.session['departing'], arriving=request.session['arriving'])
+                newbooking1.assigned_space = Booking.space_check(newbooking1)
                 # add the vehicle and booking to the session so it can be saved later
                 request.session['vehicle'] = vehicle
                 request.session['booking'] = newbooking1
@@ -281,6 +282,7 @@ def checkout(request):
         new_booking.arriving = arriving
         new_booking.departing = departing
         new_booking.date_booked = timezone.now()
+        new_booking.space_check()
         new_booking.save()
         payment = Payment(
             booking=new_booking,
@@ -421,8 +423,11 @@ def check_out(request, id):
     booking = Booking.objects.get(id=id)
     # set booking check ed out to true
     booking.checked_out = True
+    booking.assigned_space = False
     # save the booking
     booking.save()
+    # assign new space
+    booking.check_out()
     # add a success message to the page
     messages.add_message(request, messages.INFO, 'Booking successfully checked out')
     # create a query list of all of the bookings
@@ -481,7 +486,7 @@ def report_init(request):
             # run generate reports function
             generate_reports(request)
             # send user to home page
-            return redirect("Home")
+            return redirect("staff-home")
     else:
         # send user to reports page
         return render(request, 'Staff/Reports.html')
@@ -672,3 +677,12 @@ def day_input(request):
         form = DateTriggerStaff()
     #  send user to day input page
     return render(request, 'Staff/Day_Input.html', {'form': form})
+
+
+def assigned_bookings(request):
+    # create queryset of booking objects set to land on selected day
+    query_results = Booking.objects.filter(assigned_space=False)
+    # add query to context
+    context = {"query_results": query_results}
+    # send user to landings page
+    return render(request, 'Staff/Spaces.html', context)

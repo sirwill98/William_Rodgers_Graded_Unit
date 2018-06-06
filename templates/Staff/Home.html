@@ -14,4 +14,8 @@
         {% csrf_token %}
         <input type="submit" value="Check Departures and Arrivals" />
     </form>
+    <form action="{% url 'non-assigned-bookings' %}">
+        {% csrf_token %}
+        <input type="submit" value="Check Bookings not Assigned Spaces" />
+    </form>
 {% endblock %}

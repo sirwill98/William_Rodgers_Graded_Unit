@@ -5,7 +5,7 @@
     <form>
 
     </form>
-  <h2>Check In Bookings</h2>
+  <h2>Check Assigned Bookings</h2>
 {% csrf_token %}
   <p>
           {% if messages %}
@@ -22,11 +22,7 @@
             <th><h3>Length of booking in days</h3></th>
             <th><h3>Vehicle Related To Booking</h3></th>
             <th><h3>Vehicle Registration Number</h3></th>
-            <th><h3>Assigned Space?</h3></th>
-            <th><h3>Checked In</h3></th>
-            <th><h3>Checked Out</h3></th>
-            <th><h3>Check In booking</h3></th>
-            <th><h3>Check Out booking</h3></th>
+            <th><h3>Assigned Space</h3></th>
         </tr>
  {% for item in query_results %}
         <tr>
@@ -84,36 +80,7 @@
                   <p style="color: red">{{ error }}</p>
                 {% endfor %}
             </td>
-            <td>
-                {{ item.checked_in }}
-                {% if item.help_text %}
-                  <small style="color: grey">{{ item.help_text }}</small>
-                {% endif %}
-                {% for error in item.errors %}
-                  <p style="color: red">{{ error }}</p>
-                {% endfor %}
-            </td>
-            <td>
-                {{ item.checked_out }}
-                {% if item.help_text %}
-                  <small style="color: grey">{{ item.help_text }}</small>
-                {% endif %}
-                {% for error in item.errors %}
-                  <p style="color: red">{{ error }}</p>
-                {% endfor %}
-            </td>
-            <td>
-            <form action = "{% url 'check-in' id=item.id %}" method = "POST">
-                {% csrf_token %}
-                <input type="submit" name="check-in" formmethod="post" Value="Check In">
-            </form>
-            </td>
-            <td>
-                <form action = "{% url 'check-out' id=item.id %}" method = "POST">
-                    {% csrf_token %}
-                    <input type="submit" name="check-out" formmethod="post" Value="Check Out">
-                </form>
-            </td>
+
 {% endfor %}
 
         </tr>
