@@ -5,7 +5,7 @@
     <form>
 
     </form>
-  <h2>View Bookings</h2>
+  <h2>Late check outs</h2>
 {% csrf_token %}
   <p>
           {% if messages %}
@@ -18,13 +18,11 @@
     <table>
         <tr>
             <th><h3>Customer</h3></th>
-            <th><h3>Date Of Beginning</h3></th>
-            <th><h3>Length of booking in days</h3></th>
+            <th><h3>Date Of Booking</h3></th>
+            <th><h3>Day of Arrival</h3></th>
             <th><h3>Vehicle Related To Booking</h3></th>
             <th><h3>Vehicle Registration Number</h3></th>
-            <th><h3>Booking Refunded?</h3></th>
-            <th><h3>edit booking</h3></th>
-            <th><h3>Refund booking</h3></th>
+
         </tr>
  {% for item in query_results %}
         <tr>
@@ -47,7 +45,7 @@
                 {% endfor %}
             </td>
             <td>
-                {{ item.booking_length }}
+                {{ item.arriving.arriving_flight_datetime }}
                 {% if item.help_text %}
                   <small style="color: grey">{{ item.help_text }}</small>
                 {% endif %}
@@ -72,27 +70,6 @@
                 {% for error in item.errors %}
                   <p style="color: red">{{ error }}</p>
                 {% endfor %}
-            </td>
-            <td>
-                {{ item.refunded }}
-                {% if item.help_text %}
-                  <small style="color: grey">{{ item.help_text }}</small>
-                {% endif %}
-                {% for error in item.errors %}
-                  <p style="color: red">{{ error }}</p>
-                {% endfor %}
-            </td>
-            <td>
-            <form action = "{% url 'edit-form' id=item.id %}" method = "POST">
-                {% csrf_token %}
-                <input type="submit" name="edit-form" formmethod="post" Value="Edit Booking">
-            </form>
-            </td>
-            <td>
-                <form action = "{% url 'delete-booking' id=item.id %}" method = "POST">
-                    {% csrf_token %}
-                    <input type="submit" name="delete-booking" formmethod="post" Value="Refund Booking">
-                </form>
             </td>
 {% endfor %}
         </tr>

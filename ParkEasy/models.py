@@ -210,11 +210,19 @@ class Departing(models.Model):
     )
     destination = models.CharField(max_length=64, choices=destination_choices)
 
+    # used to name the objects
+    def __str__(self):
+        return 'Flight: ' + self.departing_flight_number + ' ' + str(self.departing_flight_datetime.date())
+
 
 class Arriving(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     arriving_flight_number = models.CharField(max_length=16)
     arriving_flight_datetime = models.DateTimeField()
+
+    # used to name the objects
+    def __str__(self):
+        return 'Flight: ' + self.arriving_flight_number + ' ' + str(self.arriving_flight_datetime.date())
 
 
 class Booking(models.Model):
@@ -231,16 +239,19 @@ class Booking(models.Model):
     checked_out = models.BooleanField(default=False)
     date_created = models.DateField(default=timezone.now)
     assigned_space = models.BooleanField(default=False)
+    refunded = models.BooleanField(default=False)
 
+    # used to check for availability of spaces based on quantity
     def space_check(self):
         if Booking.objects.filter(checked_out=False, assigned_space=True).count() >= 3:
             self.assigned_space = False
         else:
             self.assigned_space = True
 
+    # used to check bookings out and to give the new available space to the first booking waiting for it
     def check_out(self):
         if Booking.objects.filter(assigned_space=True).count() < 3:
-            Checkset = Booking.objects.filter(checked_in=False, checked_out=False, assigned_space=False)
+            Checkset = Booking.objects.filter(checked_in=False, checked_out=False, assigned_space=False, refunded=False)
             if Checkset:
                 next_space = Checkset.first()
                 next_space.assigned_space = True
@@ -249,7 +260,12 @@ class Booking(models.Model):
             else:
                 return
 
+    # calculates the end date of the booking
+    def calc_end(self):
+        end = self.booking_date + timedelta(days=self.booking_length+1)
+        return end
 
+    # returns the total cost of the booking
     def calc_amount(self, days):
         prices = Prices.objects.get(id=self.prices.id)
         amount = prices.base
@@ -276,11 +292,13 @@ class Booking(models.Model):
             amount = amount + prices.valet
         return int(amount)
 
+
 class Payment(models.Model):
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
     date_paid = models.DateTimeField(default=timezone.now)
     paid = models.BooleanField(default=False)
     amount = models.IntegerField()
+    charge_id = models.CharField(max_length=64)
 
 
 # class Space(models.Model):

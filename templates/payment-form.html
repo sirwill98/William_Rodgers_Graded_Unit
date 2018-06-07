@@ -4,6 +4,8 @@
 <form action="{% url 'checkout' %}" method="POST">
     <p>
         <label>Your Total Cost is: £{{ request.session.num_amount }} For {{ request.session.days }} days of Parking</label><br>
+        <label>You may refund your booking in up to 48 hours for a full refund after which you will only receive 75%</label><br>
+        <label>You may edit your booking up to 24 hours before the booking date</label><br>
     </p>
     {% csrf_token %}
     <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"

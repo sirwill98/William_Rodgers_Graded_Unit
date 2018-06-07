@@ -3,7 +3,8 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-  <h2>Welcome</h2>
+  <h2>ParkEasy Airport Parking</h2>
+  <h3>Welcome {{ user.email }} </h3>
         {% if messages %}
         <ul class="messages">
             {% for message in messages %}

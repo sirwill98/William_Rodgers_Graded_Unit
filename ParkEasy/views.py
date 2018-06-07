@@ -34,6 +34,7 @@ def delete_all():
     Departing.objects.all().delete()
     Vehicle.objects.all().delete()
     Payment.objects.all().delete()
+    print("all things deleted, remove this line now")
     return True
 
 
@@ -139,7 +140,7 @@ def departing_form(request):
         form = DepartingCreationFormCustomer(request.POST)
         # check if the data in the form is valid
         if form.is_valid():
-            #check if the ser is logged in
+            #check if the user is logged in
             if request.user.is_authenticated:
                 # get vehicle data from form
                 departing_flight_number = form.cleaned_data.get('departing_flight_number')
@@ -147,12 +148,24 @@ def departing_form(request):
                 destination = form.cleaned_data.get('destination')
                 # get logged in customer
                 cust = Customer.objects.get(email=request.user.email)
+                # validate the date of the flight
+                if request.session['booking_date'] > departing_flight_datetime:
+                    # clear existing messages
+                    storage = messages.get_messages(request)
+                    storage.used = True
+
+                    messages.error(request, 'Flight must be after or on the booking date')
+                    # send the user to the departing page
+                    return render(request, 'departing.html', {'form': form})
                 # create departing flight object
                 departing = Departing(departing_flight_number=departing_flight_number,  
                                       departing_flight_datetime=departing_flight_datetime,
                                       destination=destination, customer=cust)
                 # add departing object to the session
                 request.session['departing'] = departing
+                # clear existing messages
+                storage = messages.get_messages(request)
+                storage.used = True
                 # send user to the arriving flights page
                 return redirect("arriving")
             else:
@@ -182,11 +195,33 @@ def arriving_form(request):
                 arriving_flight_datetime = form.cleaned_data.get('arriving_flight_datetime')
                 # get logged in customer
                 cust = Customer.objects.get(email=request.user.email)
+                # get booking from session for comparison
+                book = request.session['booking']
+                # calculate booking end date
+                end_date = Booking.calc_end(book)
+                # validate flight date with booking date
+                if end_date < arriving_flight_datetime:
+                    # clear existing messages
+                    storage = messages.get_messages(request)
+                    storage.used = True
+                    messages.error(request, 'Flight must be before or on the same day as the booking end')
+                    # send the user to the arriving page
+                    return render(request, 'arriving.html', {'form': form})
+                if request.session['departing'].departing_flight_datetime > arriving_flight_datetime:
+                    # clear existing messages
+                    storage = messages.get_messages(request)
+                    storage.used = True
+                    messages.error(request, 'Flight must be after or on the same day as the departing flight')
+                    # send the user to the arriving page
+                    return render(request, 'arriving.html', {'form': form})
                 # create arriving flight object
                 arriving = Arriving(arriving_flight_number=arriving_flight_number,
                                     arriving_flight_datetime=arriving_flight_datetime, customer=cust)
                 # add the arriving flight to the session
                 request.session['arriving'] = arriving
+                # clear existing messages
+                storage = messages.get_messages(request)
+                storage.used = True
                 # send the user to the vehicle page
                 return redirect("vehicle")
             else:
@@ -216,6 +251,9 @@ def booking_form(request):
                 end = form.cleaned_data.get('End')
                 vip = form.cleaned_data.get('Vip')
                 valet = form.cleaned_data.get('Valet')
+                if start < datetime.today().date():
+                    messages.add_message(request, messages.INFO, 'Bookings must be made for today or later')
+                    return render(request, 'booking.html', {'form': form})
                 # calculate the length of booking then check that it is more than 0 days
                 length = end - start
                 length = length.days
@@ -229,6 +267,9 @@ def booking_form(request):
                 request.session['valet'] = valet
                 days = length
                 request.session['days'] = days
+                # clear existing messages
+                storage = messages.get_messages(request)
+                storage.used = True
                 # send the user to the departing page
                 return redirect("departing")
             else:
@@ -267,8 +308,7 @@ def checkout(request):
             source=token,
             description="The product charged to the user"
         )
-        # set charge id to charge id
-        new_booking.charge_id = charge.id
+        request.session['charge'] = charge
     # return an error for invalid dard
     except stripe.error.CardError as ce:
         return False, ce
@@ -288,7 +328,8 @@ def checkout(request):
             booking=new_booking,
             date_paid=timezone.now(),
             paid=True,
-            amount=request.session['num_amount']
+            amount=request.session['num_amount'],
+            charge_id=request.session['charge'].id
         )
         payment.save()
         # send a verification email to the users email address
@@ -364,6 +405,15 @@ def edit_booking(request, id):
     if request.method == 'POST':
         # set the booking to the booking sent by the url
         book = Booking.objects.get(id=id)
+        delta = timedelta(days=datetime.today() - book.booking_date)
+        if delta.days > 1:
+            messages.add_message(request, messages.INFO,
+                                 'Booking cannot be edited as there is less than 48 hours before booking')
+            query_results = Booking.objects.filter(customer=request.user)
+            # add it to a dictionary
+            context = {"query_results": query_results}
+            # return the view bookings page with the dictionary
+            return render(request, 'view-bookings.html', context)
         # set the form to the booking edit form
         form = BookingEditFormCustomer(request.POST, book.booking_length, book.booking_date)
         # check if the form is valid
@@ -392,9 +442,29 @@ def view_bookings(request):
     return render(request, 'view-bookings.html', context)
 
 
+def no_shows(request):
+    # create a query  that will contain all of the bookings that never showed up
+    query_results = Booking.objects.filter(checked_in=False, checked_out=False, assigned_space=True,
+                                           departing__departing_flight_datetime__lt=datetime.today(), refunded=False)
+    # add it to a dictionary called context
+    context = {"query_results": query_results}
+    # send the user to the view bookings page
+    return render(request, 'Staff/No_Shows.html', context)
+
+
+def late_check_outs(request):
+    # create a query  that will contain all of the bookings that never showed up
+    query_results = Booking.objects.filter(checked_in=True, checked_out=False, assigned_space=True,
+                                           arriving__arriving_flight_datetime__lt=datetime.today(), refunded=False)
+    # add it to a dictionary called context
+    context = {"query_results": query_results}
+    # send the user to the view bookings page
+    return render(request, 'Staff/Late_Out.html', context)
+
+
 def check_in_page(request):
     # create a query list of all of the bookings
-    query_results = Booking.objects.all
+    query_results = Booking.objects.filter(refunded=False)
     # add the query toa disctionary called context
     context = {"query_results": query_results}
     # send the user to the check in page
@@ -402,6 +472,9 @@ def check_in_page(request):
 
 
 def check_in(request, id):
+    # clear existing messages
+    storage = messages.get_messages(request)
+    storage.used = True
     # set the booking to the id passed in
     booking = Booking.objects.get(id=id)
     # set the booking checked in to true
@@ -411,7 +484,7 @@ def check_in(request, id):
     # add a success message to the page
     messages.add_message(request, messages.INFO, 'Booking successfully checked in')
     # create a query list of all of the bookings
-    query_results = Booking.objects.all
+    query_results = Booking.objects.filter(refunded=False)
     # add the query to the variable context
     context = {"query_results": query_results}
     # send the user to the check in page
@@ -419,6 +492,9 @@ def check_in(request, id):
 
 
 def check_out(request, id):
+    # clear existing messages
+    storage = messages.get_messages(request)
+    storage.used = True
     # set the booking to the id passed in
     booking = Booking.objects.get(id=id)
     # set booking check ed out to true
@@ -431,7 +507,7 @@ def check_out(request, id):
     # add a success message to the page
     messages.add_message(request, messages.INFO, 'Booking successfully checked out')
     # create a query list of all of the bookings
-    query_results = Booking.objects.all
+    query_results = Booking.objects.filter(refunded=False)
     # add the query to the variable context
     context = {"query_results": query_results}
     # send the user to the check in page
@@ -439,21 +515,61 @@ def check_out(request, id):
 
 
 def delete_booking(request, id):
+    # clear existing messages
+    storage = messages.get_messages(request)
+    storage.used = True
     # get the booking from the id passed in
     booking = Booking.objects.get(id=id)
-    # delete the booking
-    booking.delete()
+    if booking.checked_in:
+        messages.add_message(request, messages.INFO, 'you have already been checked in and cannot request a refund')
+        query_results = Booking.objects.filter(customer=request.user)
+        # add the query to the context dict
+        context = {"query_results": query_results}
+        # send user to the view bookings page
+        return render(request, 'view-bookings.html', context)
+    if booking.refunded:
+        messages.add_message(request, messages.INFO,
+                             'you have already been refunded and cannot request another refund')
+        query_results = Booking.objects.filter(customer=request.user)
+        # add the query to the context dict
+        context = {"query_results": query_results}
+        # send user to the view bookings page
+        return render(request, 'view-bookings.html', context)
+    payment = Payment.objects.get(booking=booking)
+    delta = datetime.today().date() - booking.date_created
+    # check if the booking is more than 48 hours old
+    if delta.days > 2:
+        # refund them a lower amount
+        amount = payment.amount/0.75
+        refund = stripe.Refund.create(
+            charge=str(payment.charge_id),
+            amount=str(amount) + "00"
+        )
+        booking.refunded = True
+        if booking.assigned_space:
+            booking.assigned_space = False
+        booking.save()
+        messages.add_message(request, messages.INFO, 'Booking only refunded 75% as was past 48 hours')
+    else:
+        refund = stripe.Refund.create(
+            charge=str(payment.charge_id),
+            amount=str(payment.amount) + "00"
+        )
+        booking.refunded = True
+        booking.save()
+        messages.add_message(request, messages.INFO, 'Booking successfully refunded')
     # create a queryset of all the bookings a customer has made
     query_results = Booking.objects.filter(customer=request.user)
     # add the query to the context dict
     context = {"query_results": query_results}
-    # add a success message to the page
-    messages.add_message(request, messages.INFO, 'Booking successfully deleted')
     # send user to the view bookings page
     return render(request, 'view-bookings.html', context)
 
 
 def delete_account(request):
+    # clear existing messages
+    storage = messages.get_messages(request)
+    storage.used = True
     # set the customer to the customer that sent the request
     cust = request.user
     # delete the customer
@@ -516,6 +632,9 @@ def add_dates(request):
             # run generate reports method
             generate_reports(request)
             #send user to home
+            # clear existing messages
+            storage = messages.get_messages(request)
+            storage.used = True
             return redirect("staff-home")
     else:
         # set form to report form
@@ -534,7 +653,7 @@ def generate_reports(request):
             # set end to end to session variable
             end = request.session['end']
             # create queryset for specific bookings
-            booking_set = Booking.objects.filter(date_created__gte=start, date_created__lte=end)
+            booking_set = Booking.objects.filter(date_created__gte=start, date_created__lte=end, refunded=False)
             # create new workbook
             wb = xlwt.Workbook()
             # create new worksheet
@@ -573,7 +692,7 @@ def generate_reports(request):
             # set end to end variable
             end = request.session['end']
             # create booking set
-            booking_set = Booking.objects.filter(date_created__gte=start, date_created__lte=end)
+            booking_set = Booking.objects.filter(date_created__gte=start, date_created__lte=end, refunded=False)
             # create new workbook
             wb = xlwt.Workbook()
             # create new worksheet
@@ -616,7 +735,7 @@ def generate_reports(request):
             # set end of week to end of last week
             end_of_week = start_of_week + timedelta(days=6)
             # create queryset of bookings
-            booking_set = Booking.objects.filter(date_created__gte=start_of_week.date(), date_created__lte=end_of_week.date())
+            booking_set = Booking.objects.filter(date_created__gte=start_of_week.date(), date_created__lte=end_of_week.date(), refunded=False)
             # define the excel document
             wb = xlwt.Workbook()
             ws = wb.add_sheet('Bookings for week ' + str(start_of_week.date()))
@@ -657,7 +776,7 @@ def day_input(request):
                 # get day value from form
                 date = form.cleaned_data.get('Day')
                 # create queryset of booking objects set to leave on selected day
-                query_results = Booking.objects.filter(booking_date=date, checked_in=False)
+                query_results = Booking.objects.filter(booking_date=date, checked_in=False, refunded=False)
                 # add query to context
                 context = {"query_results": query_results}
                 # send user to departures page
@@ -667,7 +786,7 @@ def day_input(request):
                 # get day value from form
                 date = form.cleaned_data.get('Day')
                 # create queryset of booking objects set to land on selected day
-                query_results = Booking.objects.filter(arriving__arriving_flight_datetime=date, checked_out=False)
+                query_results = Booking.objects.filter(arriving__arriving_flight_datetime=date, checked_out=False, refunded=False)
                 # add query to context
                 context = {"query_results": query_results}
                 # send user to landings page
@@ -681,7 +800,7 @@ def day_input(request):
 
 def assigned_bookings(request):
     # create queryset of booking objects set to land on selected day
-    query_results = Booking.objects.filter(assigned_space=False)
+    query_results = Booking.objects.filter(assigned_space=False, refunded=False)
     # add query to context
     context = {"query_results": query_results}
     # send user to landings page
