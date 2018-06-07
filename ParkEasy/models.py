@@ -233,16 +233,22 @@ class Booking(models.Model):
     assigned_space = models.BooleanField(default=False)
 
     def space_check(self):
-        if Booking.objects.filter(checked_in=True, checked_out=False, assigned_space=True).count() < 3:
-            self.assigned_space = True
-        else:
+        if Booking.objects.filter(checked_out=False, assigned_space=True).count() >= 3:
             self.assigned_space = False
+        else:
+            self.assigned_space = True
 
     def check_out(self):
-        if Booking.objects.filter(checked_in=True, checked_out=False).count() < 3:
-            if Booking.objects.filter(assigned_space=False, checked_out=False).order_by('date_created').first():
-                newAssign = Booking.objects.filter(assigned_space=False, checked_out=False).order_by('date_created').first()
-                newAssign.assigned_space = True
+        if Booking.objects.filter(assigned_space=True).count() < 3:
+            Checkset = Booking.objects.filter(checked_in=False, checked_out=False, assigned_space=False)
+            if Checkset:
+                next_space = Checkset.first()
+                next_space.assigned_space = True
+                next_space.save()
+                return
+            else:
+                return
+
 
     def calc_amount(self, days):
         prices = Prices.objects.get(id=self.prices.id)

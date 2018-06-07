@@ -8,6 +8,13 @@
   <h2>View Bookings</h2>
 {% csrf_token %}
   <p>
+          {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
     <table>
         <tr>
             <th><h3>Customer</h3></th>
@@ -77,13 +84,6 @@
                     <input type="submit" name="delete-booking" formmethod="post" Value="Delete Booking">
                 </form>
             </td>
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
 {% endfor %}
         </tr>
 </table>
