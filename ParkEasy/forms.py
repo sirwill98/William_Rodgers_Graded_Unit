@@ -136,6 +136,7 @@ class PriceCreationFormAdmin(forms.ModelForm):
     day = forms.FloatField()
     base = forms.IntegerField()
     after_five = forms.IntegerField()
+    quantity = forms.IntegerField()
 
     class Meta:
         model = Prices

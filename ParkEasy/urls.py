@@ -30,7 +30,6 @@ urlpatterns = [
     path('Staff/AssignedBookings', assigned_bookings, name="non-assigned-bookings"),
     path('Staff/NoShows', no_shows, name="no-shows"),
     path('Staff/LateOut', late_check_outs, name="late-check-outs")
-   # path('Staff/Departures', , name="departures")
 ]
 
 # views.delete_all()

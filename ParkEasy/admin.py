@@ -88,15 +88,15 @@ class PriceAdmin(ModelAdmin):
     add_form = PriceCreationFormAdmin
     form = PriceChangeFormAdmin
     model = Prices
-    list_display = ['id', 'vip', 'valet', 'day', 'base', 'after_five', 'is_current']
+    list_display = ['id', 'vip', 'valet', 'day', 'base', 'after_five', 'is_current', 'quantity']
     fieldsets = (
         (None,
-         {'fields': ('vip', 'valet', 'day', 'base', 'after_five', 'is_current')}),
+         {'fields': ('vip', 'valet', 'day', 'base', 'after_five', 'is_current', 'quantity')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('vip', 'valet', 'day', 'base', 'after_five', 'is_current')}
+            'fields': ('vip', 'valet', 'day', 'base', 'after_five', 'is_current', 'quantity')}
          ),
     )
 

@@ -39,6 +39,8 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+# this is the vehicle model, every booking must have a vehicle, thr bookings need to have a valid registration
+# number to be booked
 class Vehicle(models.Model):
     reg_no_regex = RegexValidator(regex=r'^[A-Z]{2}[0-9]{2} [A-Z]{3}$',
                                   message="Registration must be entered in the format: 'AB12 CDE'.",
@@ -52,6 +54,7 @@ class Vehicle(models.Model):
         return 'Vehicle: ' + self.manufacturer + ' ' + self.make
 
 
+# used to define the prices that the whole system works off of
 class Prices(models.Model):
     vip = models.IntegerField(default=0)
     valet = models.IntegerField(default=0)
@@ -59,9 +62,12 @@ class Prices(models.Model):
     base = models.IntegerField(default=27)
     after_five = models.IntegerField(default=10)
     is_current = models.BooleanField(default=False)
+    quantity = models.IntegerField(default=3)
 
 
 class Customer(AbstractUser):
+    first_name = models.CharField(max_length=30, blank=False)
+    last_name = models.CharField(max_length=150, blank=False)
     password = models.CharField(max_length=100, default="")
     email = models.EmailField(max_length=100, default="", unique=True)
     is_staff = models.BooleanField(
@@ -75,7 +81,7 @@ class Customer(AbstractUser):
                                           r'[A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\s?[0-9][A-Za-z]{2})',
                                     message="postcode must be a valid uk postcode")
     postcode = models.CharField(max_length=16, validators=[postcode_regex])
-    tel_no_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
+    tel_no_regex = RegexValidator(regex=r'^\+?l?\d{9,15}$',
                                   message="Phone number must be entered in the format: '+999999999'. Up to 15 digits "
                                           "allowed.")
     tel_no = models.CharField(validators=[tel_no_regex], max_length=17)
@@ -93,6 +99,8 @@ class Customer(AbstractUser):
 
 class Departing(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    flight_no_validator = RegexValidator(r'^([a-z][a-z]|[a-z][0-9]|[0-9][a-z])[a-z]?[0-9]{1,4}[a-z]?$',
+                                         message='please enter a valid flight number')
     departing_flight_number = models.CharField(max_length=16)
     departing_flight_datetime = models.DateTimeField()
     # list of every location glasgow airport flies to
@@ -217,6 +225,8 @@ class Departing(models.Model):
 
 class Arriving(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    flight_no_validator = RegexValidator(r'^([a-z][a-z]|[a-z][0-9]|[0-9][a-z])[a-z]?[0-9]{1,4}[a-z]?$',
+                                         message='please enter a valid flight number')
     arriving_flight_number = models.CharField(max_length=16)
     arriving_flight_datetime = models.DateTimeField()
 
@@ -243,14 +253,15 @@ class Booking(models.Model):
 
     # used to check for availability of spaces based on quantity
     def space_check(self):
-        if Booking.objects.filter(checked_out=False, assigned_space=True).count() >= 3:
+        if Booking.objects.filter(checked_out=False, assigned_space=True).count() >= \
+                Prices.objects.get(is_current=True).quantity:
             self.assigned_space = False
         else:
             self.assigned_space = True
 
     # used to check bookings out and to give the new available space to the first booking waiting for it
     def check_out(self):
-        if Booking.objects.filter(assigned_space=True).count() < 3:
+        if Booking.objects.filter(assigned_space=True).count() < Prices.objects.get(is_current=True).quantity:
             Checkset = Booking.objects.filter(checked_in=False, checked_out=False, assigned_space=False, refunded=False)
             if Checkset:
                 next_space = Checkset.first()

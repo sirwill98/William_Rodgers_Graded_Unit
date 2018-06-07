@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.mail import send_mail
+from ParkEasy.templatetags import has_group
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -195,10 +196,8 @@ def arriving_form(request):
                 arriving_flight_datetime = form.cleaned_data.get('arriving_flight_datetime')
                 # get logged in customer
                 cust = Customer.objects.get(email=request.user.email)
-                # get booking from session for comparison
-                book = request.session['booking']
                 # calculate booking end date
-                end_date = Booking.calc_end(book)
+                end_date = request.session['booking_date'] + timedelta(days=request.session['booking_length'] + 1)
                 # validate flight date with booking date
                 if end_date < arriving_flight_datetime:
                     # clear existing messages
@@ -333,18 +332,18 @@ def checkout(request):
         )
         payment.save()
         # send a verification email to the users email address
-        send_mail(
-            'ParkEasy Parking Booking',
-            'thank you '+request.user.email+' for creating a booking with ParkEasy below are details of your booking'
-            + "\n" +
-            'Price : £' + request.session['amount'][:-2] + "\n" +
-            'Beginning date : ' + str(request.session['booking'].booking_date) + "\n" +
-            'End date : ' +
-            str(request.session['booking'].booking_date + timedelta(days=request.session['booking'].booking_length)),
-            'ParkEasyAirportParking@gmail.com',
-            ['billyboy2410@gmail.com'],
-            fail_silently=False,
-        )
+#        send_mail(
+ #           'ParkEasy Parking Booking',
+  #          'thank you '+request.user.email+' for creating a booking with ParkEasy below are details of your booking'
+   #         + "\n" +
+    #        'Price : £' + request.session['amount'][:-2] + "\n" +
+     #       'Beginning date : ' + str(request.session['booking'].booking_date) + "\n" +
+      #      'End date : ' +
+       #     str(request.session['booking'].booking_date + timedelta(days=request.session['booking'].booking_length)),
+        #    'ParkEasyAirportParking@gmail.com',
+         #   ['billyboy2410@gmail.com'],
+          #  fail_silently=False,
+        #)
         # send user back to home page
         return redirect("home")
 
@@ -735,7 +734,8 @@ def generate_reports(request):
             # set end of week to end of last week
             end_of_week = start_of_week + timedelta(days=6)
             # create queryset of bookings
-            booking_set = Booking.objects.filter(date_created__gte=start_of_week.date(), date_created__lte=end_of_week.date(), refunded=False)
+            booking_set = Booking.objects.filter(date_created__gte=start_of_week.date(),
+                                                 date_created__lte=end_of_week.date(), refunded=False)
             # define the excel document
             wb = xlwt.Workbook()
             ws = wb.add_sheet('Bookings for week ' + str(start_of_week.date()))
@@ -786,7 +786,8 @@ def day_input(request):
                 # get day value from form
                 date = form.cleaned_data.get('Day')
                 # create queryset of booking objects set to land on selected day
-                query_results = Booking.objects.filter(arriving__arriving_flight_datetime=date, checked_out=False, refunded=False)
+                query_results = Booking.objects.filter(arriving__arriving_flight_datetime=date, checked_out=False,
+                                                       refunded=False)
                 # add query to context
                 context = {"query_results": query_results}
                 # send user to landings page
